@@ -40,13 +40,16 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   logout: async () => {
+    console.log('🔓 Logout initiated...');
     await authService.logout();
+    console.log('🔄 Updating auth state...');
     set({
       user: null,
       tenant: null,
       isAuthenticated: false,
       isLoading: false,
     });
+    console.log('✅ Auth state updated - user logged out');
   },
 
   restoreSession: async () => {

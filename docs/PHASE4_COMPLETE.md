@@ -220,7 +220,7 @@ Phase 4 implements the **complete CRM authentication system** and **dashboard in
 
 ### Login Screen:
 - Clean, centered layout
-- Bitna branding with large logo
+- Contaboo branding with large logo
 - Two input fields with labels
 - Checkbox for "Remember me"
 - Blue primary button
@@ -255,7 +255,7 @@ Phase 4 implements the **complete CRM authentication system** and **dashboard in
 
 1. **Start Expo:**
    ```bash
-   cd /Users/ahmedgomaa/bitna/mobile
+   cd /Users/ahmedgomaa/contaboo/mobile
    npx expo start
    ```
 

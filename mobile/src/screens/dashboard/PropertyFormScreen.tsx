@@ -16,11 +16,6 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { PropertiesStackParamList } from '../navigation/PropertiesStackNavigator';
-import {
-  MOCK_REGIONS,
-  MOCK_PROPERTY_TYPES,
-  MOCK_CATEGORIES,
-} from '../../data/mockData';
 
 type PropertyFormRouteProp = RouteProp<PropertiesStackParamList, 'PropertyForm'>;
 type PropertyFormNavigationProp = NativeStackNavigationProp<PropertiesStackParamList>;
@@ -81,6 +76,11 @@ export default function PropertyFormScreen() {
     region: 'Cairo',
     isPublic: true,
   });
+
+  // Temporary empty arrays until API endpoints are implemented
+  const MOCK_REGIONS: string[] = ['Cairo', 'Giza', 'Alexandria'];
+  const MOCK_PROPERTY_TYPES: string[] = ['Apartment', 'Villa', 'Commercial'];
+  const MOCK_CATEGORIES: string[] = ['For Sale', 'For Rent'];
 
   useEffect(() => {
     if (mode === 'edit' && propertyId) {
@@ -248,7 +248,7 @@ export default function PropertyFormScreen() {
               style={styles.picker}
             >
               {MOCK_REGIONS.map((region) => (
-                <Picker.Item key={region.id} label={region.label} value={region.value} />
+                <Picker.Item key={region} label={region} value={region} />
               ))}
             </Picker>
           </View>
@@ -264,7 +264,7 @@ export default function PropertyFormScreen() {
               style={styles.picker}
             >
               {MOCK_PROPERTY_TYPES.map((type) => (
-                <Picker.Item key={type.id} label={type.label} value={type.value} />
+                <Picker.Item key={type} label={type} value={type} />
               ))}
             </Picker>
           </View>
@@ -280,7 +280,7 @@ export default function PropertyFormScreen() {
               style={styles.picker}
             >
               {MOCK_CATEGORIES.map((category) => (
-                <Picker.Item key={category.id} label={category.label} value={category.value} />
+                <Picker.Item key={category} label={category} value={category} />
               ))}
             </Picker>
           </View>

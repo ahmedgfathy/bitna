@@ -1,4 +1,4 @@
-# Android Configuration Status - Bitna Mobile App
+# Android Configuration Status - Contaboo Mobile App
 
 ## ✅ What's Working
 
@@ -21,7 +21,7 @@
    - `android/local.properties` created with SDK path
    - All Gradle build files are valid
    - Android manifest configured
-   - Package name: `com.bitnamobile`
+   - Package name: `com.contaboomobile`
 
 ## ⚠️ What Needs Installation
 
@@ -60,7 +60,7 @@
 # 2. Connect device via USB
 
 # 3. Verify connection
-cd /Users/ahmedgomaa/bitna/mobile
+cd /Users/ahmedgomaa/contaboo/mobile
 adb devices
 # Should show your device
 
@@ -85,7 +85,7 @@ emulator -list-avds  # List available AVDs
 emulator -avd YOUR_AVD_NAME
 
 # 2. Start Metro bundler
-cd /Users/ahmedgomaa/bitna/mobile
+cd /Users/ahmedgomaa/contaboo/mobile
 npm start
 
 # 3. In another terminal, run the app
@@ -100,7 +100,7 @@ npx react-native run-android
    - https://developer.android.com/studio
 
 2. **Open Android Studio**
-   - Open the Bitna project: `/Users/ahmedgomaa/bitna/mobile/android`
+   - Open the Contaboo project: `/Users/ahmedgomaa/contaboo/mobile/android`
 
 3. **Install SDK Components:**
    - Go to: `Tools` → `SDK Manager`
@@ -134,7 +134,7 @@ sdkmanager "platforms;android-36"
 sdkmanager "build-tools;36.0.0"
 
 # Create AVD
-avdmanager create avd -n Bitna_Pixel_5 \
+avdmanager create avd -n Contaboo_Pixel_5 \
   -k "system-images;android-34;google_apis;arm64-v8a" \
   -d "pixel_5"
 ```
@@ -143,7 +143,7 @@ avdmanager create avd -n Bitna_Pixel_5 \
 
 ### Test Gradle Build
 ```bash
-cd /Users/ahmedgomaa/bitna/mobile/android
+cd /Users/ahmedgomaa/contaboo/mobile/android
 ./gradlew assembleDebug
 ```
 
@@ -152,7 +152,7 @@ If successful, the APK will be at:
 
 ### Run Check Script
 ```bash
-cd /Users/ahmedgomaa/bitna/mobile
+cd /Users/ahmedgomaa/contaboo/mobile
 ./check-android.sh
 ```
 

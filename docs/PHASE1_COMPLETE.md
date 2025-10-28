@@ -1,4 +1,4 @@
-# 🎉 Bitna Multi-Tenant Schema & Logic - COMPLETE
+# 🎉 Contaboo Multi-Tenant Schema & Logic - COMPLETE
 
 ## ✅ Phase 1 Completion Summary
 
@@ -141,11 +141,11 @@ All requested features for the **multi-tenant database schema and backend logic*
 
 **Next Step for Database:**
 ```bash
-cd /Users/ahmedgomaa/bitna/api
+cd /Users/ahmedgomaa/contaboo/api
 npm run prisma:push
 ```
 
-This will sync the schema to your MariaDB database (`bitna`).
+This will sync the schema to your MariaDB database (`contaboo`).
 
 ---
 
@@ -153,7 +153,7 @@ This will sync the schema to your MariaDB database (`bitna`).
 
 ### 1. Push Schema to Database
 ```bash
-cd /Users/ahmedgomaa/bitna/api
+cd /Users/ahmedgomaa/contaboo/api
 npm run prisma:push
 ```
 

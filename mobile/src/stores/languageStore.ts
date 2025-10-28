@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { I18nManager } from 'react-native';
 import { translations, Language, TranslationKey } from '../i18n/translations';
 
-const LANGUAGE_KEY = '@bitna:language';
+const LANGUAGE_KEY = '@contaboo:language';
 
 interface LanguageStore {
   language: Language;

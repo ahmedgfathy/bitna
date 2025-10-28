@@ -1,4 +1,4 @@
-// Bitna Design System - Theme Configuration
+// Contaboo Design System - Theme Configuration
 
 export const colors = {
   // Primary

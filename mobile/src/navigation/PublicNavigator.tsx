@@ -33,18 +33,14 @@ export default function PublicNavigator() {
         name="Login" 
         component={LoginScreen}
         options={{
-          headerShown: true,
-          headerTitle: 'Login',
-          headerBackTitle: 'Back',
+          headerShown: false,
         }}
       />
-      <Stack.Screen 
-        name="Subscribe" 
+      <Stack.Screen
+        name="Subscribe"
         component={SubscribeScreen}
         options={{
-          headerShown: true,
-          headerTitle: 'Join Bitna',
-          headerBackTitle: 'Back',
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

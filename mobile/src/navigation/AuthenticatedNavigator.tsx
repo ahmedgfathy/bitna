@@ -1,92 +1,179 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../stores/authStore';
+import { View, StyleSheet, Platform, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+// Import components
+import TopNavBar from '../components/TopNavBar';
+import LeftSidebar from '../components/LeftSidebar';
+import RightSidebar from '../components/RightSidebar';
 
 // Import dashboard screens
 import DashboardScreen from '../screens/dashboard/DashboardScreen';
-import PropertiesStackNavigator from './PropertiesStackNavigator';
-import LeadsStackNavigator from './LeadsStackNavigator';
+import PropertiesScreen from '../screens/dashboard/PropertiesScreen';
+import PropertyDetailScreen from '../screens/dashboard/PropertyDetailScreen';
+import PropertyFormScreen from '../screens/dashboard/PropertyFormScreen';
+import LeadsScreen from '../screens/dashboard/LeadsScreen';
+import LeadDetailScreen from '../screens/dashboard/LeadDetailScreen';
+import LeadFormScreen from '../screens/dashboard/LeadFormScreen';
 import EmployeesScreen from '../screens/dashboard/EmployeesScreen';
 import SettingsScreen from '../screens/dashboard/SettingsScreen';
 
-const Tab = createBottomTabNavigator();
+const { width } = Dimensions.get('window');
+const isWeb = Platform.OS === 'web';
+const isDesktop = isWeb && width >= 1024;
 
-export default function AuthenticatedNavigator() {
-  const tenant = useAuthStore((state) => state.tenant);
+const Stack = createNativeStackNavigator();
 
+function MainLayout({ children }: any) {
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#2563eb',
-        tabBarInactiveTintColor: '#94a3b8',
-        tabBarStyle: {
-          backgroundColor: '#ffffff',
-          borderTopWidth: 1,
-          borderTopColor: '#e2e8f0',
-          paddingBottom: 4,
-          paddingTop: 4,
-          height: 60,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-        },
-        tabBarShowLabel: false, // Hide labels, show icons only
-        tabBarIconStyle: {
-          marginTop: 4,
-        },
-      }}
-    >
-      <Tab.Screen
-        name="Dashboard"
-        component={DashboardScreen}
-        options={{
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="home-outline" size={28} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Properties"
-        component={PropertiesStackNavigator}
-        options={{
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="business-outline" size={28} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Leads"
-        component={LeadsStackNavigator}
-        options={{
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="document-text-outline" size={28} color={color} />
-          ),
-        }}
-      />
-      {tenant?.type === 'company' && (
-        <Tab.Screen
-          name="Team"
-          component={EmployeesScreen}
-          options={{
-            tabBarIcon: ({ color }) => (
-              <Ionicons name="people-outline" size={28} color={color} />
-            ),
-          }}
-        />
-      )}
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="settings-outline" size={28} color={color} />
-          ),
-        }}
-      />
-    </Tab.Navigator>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
+        {/* Top Navigation Bar */}
+        <TopNavBar />
+
+        {/* Main Content Area */}
+        <View style={[styles.contentWrapper, isDesktop && styles.contentWrapperDesktop]}>
+          {/* Left Sidebar (Web Only) */}
+          {isDesktop && (
+            <View style={styles.leftSidebar}>
+              <LeftSidebar />
+            </View>
+          )}
+
+          {/* Center Content */}
+          <View style={[styles.mainContent, isDesktop && styles.mainContentDesktop]}>
+            {children}
+          </View>
+
+          {/* Right Sidebar (Web Only) */}
+          {isDesktop && (
+            <View style={styles.rightSidebar}>
+              <RightSidebar />
+            </View>
+          )}
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
+
+export default function AuthenticatedNavigator() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: 'fade',
+      }}
+    >
+      <Stack.Screen name="Dashboard">
+        {() => (
+          <MainLayout>
+            <DashboardScreen />
+          </MainLayout>
+        )}
+      </Stack.Screen>
+      
+      <Stack.Screen name="Properties">
+        {() => (
+          <MainLayout>
+            <PropertiesScreen />
+          </MainLayout>
+        )}
+      </Stack.Screen>
+      
+      <Stack.Screen name="PropertyDetail">
+        {() => (
+          <MainLayout>
+            <PropertyDetailScreen />
+          </MainLayout>
+        )}
+      </Stack.Screen>
+      
+      <Stack.Screen name="PropertyForm">
+        {() => (
+          <MainLayout>
+            <PropertyFormScreen />
+          </MainLayout>
+        )}
+      </Stack.Screen>
+      
+      <Stack.Screen name="Leads">
+        {() => (
+          <MainLayout>
+            <LeadsScreen />
+          </MainLayout>
+        )}
+      </Stack.Screen>
+      
+      <Stack.Screen name="LeadDetail">
+        {() => (
+          <MainLayout>
+            <LeadDetailScreen />
+          </MainLayout>
+        )}
+      </Stack.Screen>
+      
+      <Stack.Screen name="LeadForm">
+        {() => (
+          <MainLayout>
+            <LeadFormScreen />
+          </MainLayout>
+        )}
+      </Stack.Screen>
+      
+      <Stack.Screen name="Team">
+        {() => (
+          <MainLayout>
+            <EmployeesScreen />
+          </MainLayout>
+        )}
+      </Stack.Screen>
+      
+      <Stack.Screen name="Settings">
+        {() => (
+          <MainLayout>
+            <SettingsScreen />
+          </MainLayout>
+        )}
+      </Stack.Screen>
+    </Stack.Navigator>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  contentWrapper: {
+    flex: 1,
+  },
+  contentWrapperDesktop: {
+    flexDirection: 'row',
+  },
+  leftSidebar: {
+    width: 300,
+    backgroundColor: '#ffffff',
+    borderRightWidth: 1,
+    borderRightColor: '#e2e8f0',
+  },
+  mainContent: {
+    flex: 1,
+  },
+  mainContentDesktop: {
+    maxWidth: 1200,
+    flex: 1,
+    marginHorizontal: 'auto',
+  },
+  rightSidebar: {
+    width: 300,
+    backgroundColor: '#ffffff',
+    borderLeftWidth: 1,
+    borderLeftColor: '#e2e8f0',
+  },
+});

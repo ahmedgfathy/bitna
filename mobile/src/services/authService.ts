@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LoginCredentials, LoginResponse, User, Tenant } from '../types/auth';
+import { STORAGE_KEYS } from '../config/constants';
 
 // Temporary mock credentials for development
 const MOCK_CREDENTIALS = {
@@ -7,26 +8,22 @@ const MOCK_CREDENTIALS = {
   password: 'zerocall',
 };
 
-// Mock user and tenant data
+// Mock Super Admin user and tenant data
 const MOCK_USER: User = {
-  id: '1',
+  id: 'super-admin-1',
   mobile: '01002778090',
   name: 'Ahmed Gomaa',
-  role: 'owner',
-  tenantId: 'tenant-1',
+  role: 'owner', // Super Admin - Platform Owner
+  tenantId: 'super-admin-tenant',
 };
 
 const MOCK_TENANT: Tenant = {
-  id: 'tenant-1',
-  name: 'Ahmed Real Estate',
-  type: 'freelancer',
+  id: 'super-admin-tenant',
+  name: 'Contaboo - Real Estate CRM',
+  type: 'company', // SaaS Platform
   mobile: '01002778090',
   createdAt: new Date().toISOString(),
 };
-
-const TOKEN_KEY = '@bitna_auth_token';
-const USER_KEY = '@bitna_user';
-const TENANT_KEY = '@bitna_tenant';
 
 export const authService = {
   /**
@@ -63,9 +60,9 @@ export const authService = {
         const token = `mock_token_${Date.now()}`;
 
         // Store session data
-        await AsyncStorage.setItem(TOKEN_KEY, token);
-        await AsyncStorage.setItem(USER_KEY, JSON.stringify(MOCK_USER));
-        await AsyncStorage.setItem(TENANT_KEY, JSON.stringify(MOCK_TENANT));
+        await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+        await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(MOCK_USER));
+        await AsyncStorage.setItem(STORAGE_KEYS.TENANT_ID, JSON.stringify(MOCK_TENANT));
 
         return {
           success: true,
@@ -93,9 +90,9 @@ export const authService = {
    */
   restoreSession: async (): Promise<LoginResponse> => {
     try {
-      const token = await AsyncStorage.getItem(TOKEN_KEY);
-      const userJson = await AsyncStorage.getItem(USER_KEY);
-      const tenantJson = await AsyncStorage.getItem(TENANT_KEY);
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      const userJson = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+      const tenantJson = await AsyncStorage.getItem(STORAGE_KEYS.TENANT_ID);
 
       if (token && userJson && tenantJson) {
         const user = JSON.parse(userJson) as User;
@@ -127,9 +124,21 @@ export const authService = {
    */
   logout: async (): Promise<void> => {
     try {
-      await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY, TENANT_KEY]);
+      console.log('🚪 Logging out - clearing session data...');
+      await AsyncStorage.multiRemove([STORAGE_KEYS.AUTH_TOKEN, STORAGE_KEYS.USER_DATA, STORAGE_KEYS.TENANT_ID]);
+      
+      // Verify data is cleared
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      const user = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+      const tenant = await AsyncStorage.getItem(STORAGE_KEYS.TENANT_ID);
+      
+      if (!token && !user && !tenant) {
+        console.log('✅ Session data cleared successfully');
+      } else {
+        console.warn('⚠️ Some session data may not have been cleared');
+      }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('❌ Logout error:', error);
     }
   },
 
@@ -138,7 +147,7 @@ export const authService = {
    */
   getToken: async (): Promise<string | null> => {
     try {
-      return await AsyncStorage.getItem(TOKEN_KEY);
+      return await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     } catch (error) {
       console.error('Get token error:', error);
       return null;

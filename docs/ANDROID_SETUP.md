@@ -1,4 +1,4 @@
-# Android Setup Guide for Bitna Mobile App
+# Android Setup Guide for Contaboo Mobile App
 
 ## 📱 Current Android Configuration Status
 
@@ -118,7 +118,7 @@ adb devices
 
 ---
 
-## 🚀 Running the Bitna Mobile App on Android
+## 🚀 Running the Contaboo Mobile App on Android
 
 ### Method 1: Using an Emulator
 
@@ -133,7 +133,7 @@ adb devices
 
 2. **In a new terminal, navigate to the mobile folder:**
    ```bash
-   cd /Users/ahmedgomaa/bitna/mobile
+   cd /Users/ahmedgomaa/contaboo/mobile
    ```
 
 3. **Start Metro bundler:**
@@ -143,7 +143,7 @@ adb devices
 
 4. **In another terminal, run the app:**
    ```bash
-   cd /Users/ahmedgomaa/bitna/mobile
+   cd /Users/ahmedgomaa/contaboo/mobile
    npx react-native run-android
    ```
 
@@ -165,7 +165,7 @@ adb devices
 
 4. **Run the app:**
    ```bash
-   cd /Users/ahmedgomaa/bitna/mobile
+   cd /Users/ahmedgomaa/contaboo/mobile
    npm start
    # In another terminal:
    npx react-native run-android
@@ -225,7 +225,7 @@ npx react-native run-android
 **Solution:**
 ```bash
 # Uninstall the app
-adb uninstall com.bitnamobile
+adb uninstall com.contaboomobile
 
 # Reinstall
 npx react-native run-android
@@ -237,7 +237,7 @@ npx react-native run-android
 
 ```bash
 # Navigate to project
-cd /Users/ahmedgomaa/bitna/mobile
+cd /Users/ahmedgomaa/contaboo/mobile
 
 # Start Metro bundler
 npm start
@@ -282,7 +282,7 @@ npx react-native run-android
 2. **Create at least one AVD** (Android Virtual Device)
 3. **Test the build:**
    ```bash
-   cd /Users/ahmedgomaa/bitna/mobile/android
+   cd /Users/ahmedgomaa/contaboo/mobile/android
    ./gradlew assembleDebug
    ```
 4. **Start the emulator and run the app**

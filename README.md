@@ -1,11 +1,11 @@
-# Bitna - Multi-Tenant Real Estate CRM
+# Contaboo - Multi-Tenant Real Estate CRM
 
 A comprehensive Real Estate CRM system built with React Native (Expo) for mobile/web and Node.js (Express + Prisma) for the backend.
 
-## 🏗️ Project Structure
+## 📂 Project Structure
 
 ```
-bitna/
+contaboo/
 ├── api/                    # Backend API (Node.js + Express + Prisma)
 │   ├── src/
 │   │   ├── config/        # Database & app configuration
@@ -102,7 +102,7 @@ npm install
 3. **Configure environment variables:**
 Create `.env` file in `api/` folder:
 ```env
-DATABASE_URL="mysql://user:password@localhost:3306/bitna"
+DATABASE_URL="mysql://user:password@localhost:3306/contaboo"
 PORT=3000
 NODE_ENV=development
 ```
@@ -296,7 +296,7 @@ npx prisma migrate reset
 
 ### API (.env)
 ```env
-DATABASE_URL="mysql://user:password@localhost:3306/bitna"
+DATABASE_URL="mysql://user:password@localhost:3306/contaboo"
 PORT=3000
 NODE_ENV=development
 JWT_SECRET="your-secret-key"

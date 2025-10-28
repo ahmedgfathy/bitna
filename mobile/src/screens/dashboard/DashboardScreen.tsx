@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../stores/authStore';
 import { useLanguageStore } from '../../stores/languageStore';
 import apiClient from '../../services/api';
-import LanguageSwitcher from '../../components/LanguageSwitcher';
 
 interface DashboardStats {
   properties: {
@@ -32,6 +30,7 @@ interface DashboardStats {
 export default function DashboardScreen() {
   const user = useAuthStore((state) => state.user);
   const tenant = useAuthStore((state) => state.tenant);
+  const logout = useAuthStore((state) => state.logout);
   const { t, initLanguage } = useLanguageStore();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,10 +49,23 @@ export default function DashboardScreen() {
       if (response.data.status === 'success') {
         setStats(response.data.data);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch dashboard stats:', error);
-      setError('Unable to connect to server. Please check your connection.');
-      // Set default values on error
+      
+      // Check if it's a network/connection error
+      if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
+        setError('Unable to connect to server. Please check if the API server is running.');
+      } else if (error.response?.status === 401) {
+        // Authentication failed - logout user
+        console.log('🔒 401 error - logging out user');
+        await logout();
+        return; // Don't set error or stats, just logout
+      } else {
+        // Don't show error for other cases, just use default values
+        console.log('Using default stats values');
+      }
+      
+      // Set default values
       setStats({
         properties: { total: 0, public: 0, private: 0 },
         leads: { total: 0, new: 0, contacted: 0, qualified: 0, negotiating: 0, won: 0, lost: 0 },
@@ -65,18 +77,8 @@ export default function DashboardScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header with Language Switcher */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>{t('welcomeBack')}</Text>
-            <Text style={styles.userName}>{user?.name || 'User'}</Text>
-            <Text style={styles.tenantName}>{tenant?.name}</Text>
-          </View>
-          <LanguageSwitcher />
-        </View>
-
         {/* Stats Grid */}
         {error && (
           <View style={styles.errorContainer}>
@@ -133,7 +135,7 @@ export default function DashboardScreen() {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -144,28 +146,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 24,
-  },
-  greeting: {
-    fontSize: 16,
-    color: '#64748b',
-    marginBottom: 4,
-  },
-  userName: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 4,
-  },
-  tenantName: {
-    fontSize: 14,
-    color: '#2563eb',
-    fontWeight: '600',
   },
   statsGrid: {
     flexDirection: 'row',

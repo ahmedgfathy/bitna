@@ -30,7 +30,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (_req: Request, res: Response) => {
   res.json({ 
     status: 'ok', 
-    message: 'Bitna API is running',
+    message: 'Contaboo API is running',
     timestamp: new Date().toISOString()
   });
 });
@@ -42,7 +42,7 @@ app.get('/db-test', async (_req: Request, res: Response) => {
     res.json({ 
       status: 'connected', 
       message: 'Database connection successful',
-      database: 'bitna'
+      database: 'contaboo'
     });
   } catch (error) {
     res.status(500).json({ 
@@ -72,8 +72,9 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start server
-app.listen(port, () => {
-  console.log(`⚡️ Bitna API server is running on port ${port}`);
+const PORT = Number(port);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`⚡️ Contaboo API server is running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${port}/health`);
   console.log(`🗄️  Database test: http://localhost:${port}/db-test`);
   console.log(`\n📚 Available API Routes:`);

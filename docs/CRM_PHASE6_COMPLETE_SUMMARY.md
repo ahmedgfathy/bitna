@@ -1,4 +1,4 @@
-# Bitna CRM - Phase 6 Complete Implementation Summary
+# Contaboo CRM - Phase 6 Complete Implementation Summary
 
 **Date:** October 28, 2025  
 **Status:** ✅ COMPLETE - Full CRUD Implemented
@@ -53,7 +53,7 @@ Routes:
 
 **DashboardScreen.tsx**
 - ✅ Added "Go to Homepage" button in top-right corner
-- ✅ Opens external browser to public website (https://bitna.com)
+- ✅ Opens external browser to public website (https://contaboo.com)
 - ✅ Styled as blue badge with home icon
 - ✅ Allows CRM users to access public site without logout
 
@@ -351,7 +351,7 @@ mobile/src/
 - [ ] Bottom bar shows 4-5 icons (Dashboard, Properties, Leads, Team*, Settings)
 - [ ] Icons are 28px Ionicons (not emojis)
 - [ ] Dashboard has "Go to Homepage" button in top-right
-- [ ] Clicking homepage button opens browser to https://bitna.com
+- [ ] Clicking homepage button opens browser to https://contaboo.com
 
 ### ✅ Properties Module
 **List Screen:**

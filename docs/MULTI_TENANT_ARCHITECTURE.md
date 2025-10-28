@@ -1,4 +1,4 @@
-# Bitna Multi-Tenant Architecture Documentation
+# Contaboo Multi-Tenant Architecture Documentation
 
 ## 🏗️ Database Schema Overview
 

@@ -52,12 +52,12 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
     }
 
     // Mock user data - should match the MOCK_USER from authService.ts
-    // In production, this would be loaded from database based on JWT payload
+    // Super Admin - Platform Owner with full access
     const mockUser = {
-      id: '1',
+      id: 'super-admin-1',
       mobile: '01002778090',
-      role: 'OWNER', // Note: Backend uses uppercase role names
-      tenantId: 'tenant-1',
+      role: 'OWNER', // Super Admin role
+      tenantId: 'super-admin-tenant',
     };
 
     // Attach user to request
@@ -87,12 +87,12 @@ export const optionalAuth = (_req: Request, _res: Response, next: NextFunction):
       const token = authHeader.substring(7);
       
       if (token.startsWith('mock_token_')) {
-        // Attach mock user data
+        // Attach mock super admin user data
         _req.user = {
-          id: '1',
+          id: 'super-admin-1',
           mobile: '01002778090',
           role: 'OWNER',
-          tenantId: 'tenant-1',
+          tenantId: 'super-admin-tenant',
         };
       }
     }

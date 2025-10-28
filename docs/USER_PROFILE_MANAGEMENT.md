@@ -1,7 +1,7 @@
 # User Profile Management Guide
 
 ## Overview
-This guide explains how user profiles work in the Bitna CRM system, how they're created, stored, and how to modify them.
+This guide explains how user profiles work in the Contaboo CRM system, how they're created, stored, and how to modify them.
 
 ---
 
@@ -166,9 +166,9 @@ interface AuthStore extends AuthState {
 ```typescript
 // Keys used for storage
 export const STORAGE_KEYS = {
-  AUTH_TOKEN: '@bitna:auth_token',
-  USER_DATA: '@bitna:user_data',
-  TENANT_ID: '@bitna:tenant_id',
+  AUTH_TOKEN: '@contaboo:auth_token',
+  USER_DATA: '@contaboo:user_data',
+  TENANT_ID: '@contaboo:tenant_id',
 };
 
 // Saving user data

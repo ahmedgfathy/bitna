@@ -10,9 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================
-// MULTI-TENANT REAL ESTATE CRM SCHEMA - BITNA
-// ============================================
+// MULTI-TENANT REAL ESTATE CRM SCHEMA - CONTABOO
 
 // Enum Definitions
 enum TenantType {

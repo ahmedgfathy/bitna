@@ -1,4 +1,4 @@
-# Bitna CRM - Visual Interface Guide
+# Contaboo CRM - Visual Interface Guide
 
 ## 🎨 Complete CRM Layout Overview
 
@@ -417,4 +417,4 @@ Border: borderColor matches background
 **Visual Guide Version**: 1.0  
 **Last Updated**: October 28, 2024  
 **Platform**: React Native + Expo  
-**Design System**: Bitna Theme (theme.ts)
+**Design System**: Contaboo Theme (theme.ts)

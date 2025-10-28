@@ -1,17 +1,17 @@
 {
-  "name": "bitna-api",
+  "name": "contaboo-api",
   "version": "1.0.0",
-  "description": "Bitna Real Estate CRM - Backend API",
+  "description": "Contaboo Real Estate CRM - Backend API",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "seed": "ts-node prisma/seed.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "prisma:push": "prisma db push",
-    "examples": "ts-node-dev src/examples/queries.ts"
+    "prisma:push": "prisma db push"
   },
   "keywords": ["real-estate", "crm", "saas", "multi-tenant"],
   "author": "Ahmed Gomaa",

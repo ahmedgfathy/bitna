@@ -55,28 +55,29 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Top Logo Header - Always Visible */}
-      <TouchableOpacity 
-        style={styles.topLogoContainer}
-        onPress={() => navigation.navigate('Home')}
-        activeOpacity={0.8}
-      >
-        <View style={styles.logoCircleSmall}>
-          <Text style={styles.logoLetterSmall}>C</Text>
-        </View>
-        <Text style={styles.topLogoText}>Contaboo</Text>
-      </TouchableOpacity>
-
       <View style={styles.content}>
         {isDesktop && (
           <View style={styles.heroSection}>
-            <Text style={styles.heroMainTitle}>
-              Home Investment with Contaboo
+            <View style={styles.logoContainer}>
+              <View style={styles.logoCircle}>
+                <Text style={styles.logoLetter}>C</Text>
+              </View>
+              <Text style={styles.heroTitle}>contaboo</Text>
+            </View>
+            <Text style={styles.heroSubtitle}>
+              Find your dream property with Contaboo
             </Text>
           </View>
         )}
 
         <View style={styles.formContainer}>
+          {!isDesktop && (
+            <View style={styles.mobileLogo}>
+              <View style={styles.logoCircle}>
+                <Text style={styles.logoLetter}>C</Text>
+              </View>
+            </View>
+          )}
 
           <View style={styles.card}>
             <TextInput
@@ -146,109 +147,105 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  topLogoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e4e6eb',
-    justifyContent: 'flex-start',
-  },
-  logoCircleSmall: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#1877f2',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  logoLetterSmall: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  topLogoText: {
-    fontSize: isDesktop ? 32 : 22,
-    fontWeight: 'bold',
-    color: '#1877f2',
+    backgroundColor: isDesktop ? '#f0f2f5' : '#ffffff',
   },
   content: {
     flex: 1,
     flexDirection: isDesktop ? 'row' : 'column',
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: isDesktop ? 40 : 0,
-    paddingTop: isDesktop ? 0 : 20,
-    backgroundColor: isDesktop ? '#f0f2f5' : '#ffffff',
+    justifyContent: 'center',
+    paddingHorizontal: isDesktop ? 40 : 16,
+    paddingVertical: isDesktop ? 0 : 40,
   },
   heroSection: {
     flex: 1,
-    justifyContent: 'flex-start',
-    paddingRight: isDesktop ? 80 : 0,
-    paddingTop: isDesktop ? 20 : 0,
+    justifyContent: 'center',
     maxWidth: 580,
-    paddingLeft: isDesktop ? 40 : 0,
+    paddingRight: 60,
   },
-  heroMainTitle: {
-    fontSize: 48,
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logoCircle: {
+    width: isDesktop ? 70 : 60,
+    height: isDesktop ? 70 : 60,
+    borderRadius: isDesktop ? 35 : 30,
+    backgroundColor: '#1877f2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoLetter: {
+    fontSize: isDesktop ? 42 : 36,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  heroTitle: {
+    fontSize: 60,
     fontWeight: 'bold',
     color: '#1877f2',
-    lineHeight: 56,
+    marginLeft: 12,
+  },
+  heroSubtitle: {
+    fontSize: 28,
+    lineHeight: 32,
+    color: '#1c1e21',
+  },
+  mobileLogo: {
+    alignItems: 'center',
+    marginBottom: 40,
   },
   formContainer: {
     width: '100%',
     maxWidth: 396,
-    alignItems: 'center',
-    paddingHorizontal: isDesktop ? 0 : 16,
-    marginTop: isDesktop ? 0 : 0,
   },
   card: {
-    width: '100%',
     backgroundColor: '#ffffff',
-    borderRadius: isDesktop ? 8 : 0,
+    borderRadius: 8,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: isDesktop ? 0.1 : 0,
-    shadowRadius: 8,
-    elevation: isDesktop ? 2 : 0,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+      },
+    }),
   },
   input: {
-    width: '100%',
-    height: 52,
-    backgroundColor: '#f5f6f7',
+    backgroundColor: '#f0f2f5',
     borderRadius: 6,
     borderWidth: 1,
     borderColor: '#dddfe2',
     paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 17,
-    color: '#1c1e21',
     marginBottom: 12,
+    color: '#1c1e21',
   },
   loginButton: {
-    width: '100%',
-    height: 48,
     backgroundColor: '#1877f2',
     borderRadius: 6,
-    justifyContent: 'center',
+    paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 12,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
+    justifyContent: 'center',
+    marginTop: 6,
   },
   loginButtonText: {
     color: '#ffffff',
     fontSize: 20,
     fontWeight: 'bold',
   },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
   forgotButton: {
-    alignSelf: 'center',
+    alignItems: 'center',
     paddingVertical: 16,
   },
   forgotText: {
@@ -263,35 +260,33 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#dadde1',
+    backgroundColor: '#dddfe2',
   },
   dividerText: {
     color: '#8a8d91',
-    fontSize: 14,
     paddingHorizontal: 16,
+    fontSize: 13,
   },
   createButton: {
-    width: isDesktop ? 'auto' : '100%',
     backgroundColor: '#42b72a',
     borderRadius: 6,
     paddingVertical: 14,
-    paddingHorizontal: isDesktop ? 64 : 16,
-    justifyContent: 'center',
+    paddingHorizontal: 16,
     alignItems: 'center',
     alignSelf: 'center',
   },
   createButtonText: {
     color: '#ffffff',
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   footerText: {
-    marginTop: 28,
     fontSize: 14,
     color: '#1c1e21',
     textAlign: 'center',
+    marginTop: 28,
   },
   boldText: {
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
 });

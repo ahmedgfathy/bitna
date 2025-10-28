@@ -172,12 +172,6 @@ export default function SettingsScreen() {
                 <Text style={styles.actionButtonArrow}>›</Text>
               </TouchableOpacity>
             </View>
-
-            {/* Logout Button */}
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <Text style={styles.logoutIcon}>🚪</Text>
-              <Text style={styles.logoutButtonText}>Logout</Text>
-            </TouchableOpacity>
           </View>
         );
 
@@ -679,25 +673,6 @@ const styles = StyleSheet.create({
   // Preferences Styles
   preferenceSection: {
     gap: 12,
-  },
-  // Logout Button
-  logoutButton: {
-    flexDirection: 'row',
-    backgroundColor: '#ef4444',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-    gap: 8,
-  },
-  logoutIcon: {
-    fontSize: 20,
-  },
-  logoutButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
   },
   // Modal Styles
   modalContainer: {

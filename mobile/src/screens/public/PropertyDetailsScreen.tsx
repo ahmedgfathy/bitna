@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,35 +8,59 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { PublicStackParamList, PropertyType } from '../../types/navigation';
+import apiService from '../../services/api';
 
 type PropertyDetailsProps = NativeStackScreenProps<PublicStackParamList, 'PropertyDetails'>;
-
-// Mock property data (later fetch from API using propertyId)
-const MOCK_PROPERTY: PropertyType = {
-  id: '1',
-  title: 'Modern Villa in New Cairo',
-  description: 'Luxurious 4-bedroom villa with private pool and garden. This stunning property features modern architecture, spacious living areas, and high-end finishes throughout. Perfect for families seeking comfort and style in one of Cairo\'s most prestigious neighborhoods.\n\nFeatures:\n• 4 spacious bedrooms with en-suite bathrooms\n• Large living and dining areas\n• Modern kitchen with premium appliances\n• Private swimming pool\n• Landscaped garden\n• Covered parking for 2 cars\n• 24/7 security\n• Close to international schools and shopping centers',
-  price: 8500000,
-  location: 'New Cairo, Cairo',
-  latitude: 30.0444,
-  longitude: 31.2357,
-  imageUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
-  propertyType: 'Villa',
-  category: 'For Sale',
-  region: 'Cairo',
-  isPublic: true,
-};
 
 const { width } = Dimensions.get('window');
 
 export default function PropertyDetailsScreen({ route, navigation }: PropertyDetailsProps) {
   const { propertyId } = route.params;
-  
-  // TODO: Fetch property from API using propertyId
-  const property = MOCK_PROPERTY;
+  const [property, setProperty] = useState<PropertyType | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProperty();
+  }, [propertyId]);
+
+  const loadProperty = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.get(`/properties/${propertyId}`);
+      setProperty(response.data);
+    } catch (error) {
+      console.error('Failed to load property:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!property) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Property not found</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const formatPrice = (price: number) => {
     if (price >= 1000000) {
@@ -99,7 +123,7 @@ export default function PropertyDetailsScreen({ route, navigation }: PropertyDet
           <View style={styles.contactSection}>
             <Text style={styles.contactTitle}>Interested in this property?</Text>
             <Text style={styles.contactSubtitle}>
-              Join Bitna to connect with the agent and get more details
+              Join Contaboo to connect with the agent and get more details
             </Text>
             <TouchableOpacity
               style={styles.contactButton}
@@ -271,6 +295,33 @@ const styles = StyleSheet.create({
   loginButtonText: {
     color: '#2563eb',
     fontSize: 14,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#64748b',
+    marginBottom: 20,
+  },
+  backButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
     fontWeight: '600',
   },
 });

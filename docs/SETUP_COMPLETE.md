@@ -1,8 +1,8 @@
-# Bitna Project - Setup Complete ✅
+# Contaboo Project - Setup Complete ✅
 
 ## 📊 Project Overview
 
-**Project Name**: Bitna  
+**Project Name**: Contaboo  
 **Type**: Multi-Tenant Real Estate CRM SaaS  
 **Status**: Initial Setup Complete  
 **Date**: October 28, 2025
@@ -27,14 +27,14 @@
 
 ### 3. Database Integration
 - ✅ Configured Prisma ORM for MySQL/MariaDB
-- ✅ Set up database connection to local MariaDB (bitna database)
+- ✅ Set up database connection to local MariaDB (contaboo database)
 - ✅ Created Prisma schema file (ready for model definitions)
 - ✅ Generated Prisma Client
 - ✅ Environment variables configured with database credentials
 
 ### 4. Project Structure
 ```
-/bitna
+/contaboo
 ├── .gitignore
 ├── README.md
 ├── /mobile/              # React Native app
@@ -76,7 +76,7 @@
 
 ### Backend API (.env)
 ```
-DATABASE_URL="mysql://root:zerocall@localhost:3306/bitna"
+DATABASE_URL="mysql://root:zerocall@localhost:3306/contaboo"
 PORT=3000
 NODE_ENV=development
 JWT_SECRET=your-secret-key-change-in-production
@@ -91,7 +91,7 @@ API_BASE_URL=http://localhost:3000
 
 ### Database
 - **Type**: MariaDB/MySQL
-- **Database Name**: bitna
+- **Database Name**: contaboo
 - **Host**: localhost:3306
 - **User**: root
 - **Password**: zerocall
@@ -102,7 +102,7 @@ API_BASE_URL=http://localhost:3000
 
 ### Backend API
 ```bash
-cd /Users/ahmedgomaa/bitna/api
+cd /Users/ahmedgomaa/contaboo/api
 npm run dev
 ```
 The API will run on: `http://localhost:3000`
@@ -113,7 +113,7 @@ Test endpoints:
 
 ### Mobile App (iOS)
 ```bash
-cd /Users/ahmedgomaa/bitna/mobile
+cd /Users/ahmedgomaa/contaboo/mobile
 
 # Install iOS dependencies (first time only)
 cd ios
@@ -130,7 +130,7 @@ npx react-native run-ios
 
 ### Mobile App (Android)
 ```bash
-cd /Users/ahmedgomaa/bitna/mobile
+cd /Users/ahmedgomaa/contaboo/mobile
 npx react-native start
 # In a new terminal
 npx react-native run-android

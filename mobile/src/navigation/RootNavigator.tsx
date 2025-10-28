@@ -18,16 +18,12 @@ export default function RootNavigator() {
       }}
     >
       <Stack.Screen name="Main" component={AuthenticatedNavigator} />
-      <Stack.Screen 
-        name="PublicHome" 
-        component={HomeScreen}
+            <Stack.Screen
+        name="Root"
+        component={NavigationSwitcher}
         options={{
-          headerShown: true,
-          headerTitle: 'Bitna',
-          headerBackTitle: 'Back to CRM',
-          presentation: 'modal',
-        }}
-      />
+          headerShown: false,
+          headerTitle: 'Contaboo',
     </Stack.Navigator>
   );
 }

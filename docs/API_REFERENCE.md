@@ -1,4 +1,4 @@
-# Bitna API Reference
+# Contaboo API Reference
 
 ## Base URL
 ```
@@ -27,7 +27,7 @@ GET /health
 ```json
 {
   "status": "ok",
-  "message": "Bitna API is running",
+  "message": "Contaboo API is running",
   "timestamp": "2025-10-28T12:00:00.000Z"
 }
 ```
@@ -44,7 +44,7 @@ GET /db-test
 {
   "status": "connected",
   "message": "Database connection successful",
-  "database": "bitna"
+  "database": "contaboo"
 }
 ```
 

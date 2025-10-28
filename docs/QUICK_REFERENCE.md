@@ -1,10 +1,10 @@
-# Bitna - Quick Command Reference
+# Contaboo - Quick Command Reference
 
 ## Backend API Commands
 
 ```bash
 # Navigate to API folder
-cd /Users/ahmedgomaa/bitna/api
+cd /Users/ahmedgomaa/contaboo/api
 
 # Development
 npm run dev                    # Start dev server with hot reload
@@ -24,7 +24,7 @@ npm start                      # Run production build
 
 ```bash
 # Navigate to mobile folder
-cd /Users/ahmedgomaa/bitna/mobile
+cd /Users/ahmedgomaa/contaboo/mobile
 
 # Development
 npm start                      # Start Metro bundler
@@ -49,7 +49,7 @@ npx react-native log-android   # View Android logs
 mysql -u root -p
 
 # Inside MySQL shell
-USE bitna;                     # Switch to bitna database
+USE contaboo;                     # Switch to contaboo database
 SHOW TABLES;                   # List all tables
 DESCRIBE table_name;           # Show table structure
 ```
@@ -59,21 +59,21 @@ DESCRIBE table_name;           # Show table structure
 ### Start Development
 ```bash
 # Terminal 1 - Backend
-cd /Users/ahmedgomaa/bitna/api
+cd /Users/ahmedgomaa/contaboo/api
 npm run dev
 
 # Terminal 2 - Mobile
-cd /Users/ahmedgomaa/bitna/mobile
+cd /Users/ahmedgomaa/contaboo/mobile
 npm start
 
 # Terminal 3 - Run App
-cd /Users/ahmedgomaa/bitna/mobile
+cd /Users/ahmedgomaa/contaboo/mobile
 npx react-native run-ios
 ```
 
 ### After Schema Changes
 ```bash
-cd /Users/ahmedgomaa/bitna/api
+cd /Users/ahmedgomaa/contaboo/api
 # Edit prisma/schema.prisma
 npm run prisma:migrate         # Create migration
 npm run prisma:generate        # Update Prisma Client

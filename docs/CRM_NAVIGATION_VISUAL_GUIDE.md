@@ -1,4 +1,4 @@
-# Bitna CRM - Complete Navigation & CRUD Visual Guide
+# Contaboo CRM - Complete Navigation & CRUD Visual Guide
 
 ## 🧭 Bottom Navigation Bar (Redesigned)
 
@@ -45,7 +45,7 @@
 ```
 
 **Homepage Button:**
-- Opens external browser → https://bitna.com
+- Opens external browser → https://contaboo.com
 - Allows CRM users to view public site
 - Blue badge style with home icon
 - Top-right corner placement

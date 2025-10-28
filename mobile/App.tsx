@@ -6,6 +6,19 @@ import PublicNavigator from './src/navigation/PublicNavigator';
 import AuthenticatedNavigator from './src/navigation/AuthenticatedNavigator';
 import { useAuthStore } from './src/stores/authStore';
 
+// Linking configuration to preserve URL state on refresh
+const linking = {
+  prefixes: [],
+  config: {
+    screens: {
+      Home: '',
+      Login: 'login',
+      Subscribe: 'subscribe',
+      PropertyDetails: 'property/:id',
+    },
+  },
+};
+
 export default function App() {
   const { isAuthenticated, isLoading, restoreSession } = useAuthStore();
 
@@ -24,7 +37,7 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       {isAuthenticated ? <AuthenticatedNavigator /> : <PublicNavigator />}
       <StatusBar style="auto" />
     </NavigationContainer>

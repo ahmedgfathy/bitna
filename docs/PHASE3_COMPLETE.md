@@ -8,7 +8,7 @@
 
 ## 🎉 What Was Built
 
-Phase 3 implements the complete **public-facing frontend** of Bitna - the first screens users see before logging in or subscribing.
+Phase 3 implements the complete **public-facing frontend** of Contaboo - the first screens users see before logging in or subscribing.
 
 ### ✅ Completed Components
 
@@ -23,7 +23,7 @@ Phase 3 implements the complete **public-facing frontend** of Bitna - the first 
 #### 2. **Home Screen** 🏠
 - **File:** `/mobile/src/screens/public/HomeScreen.tsx`
 - **Features:**
-  - App header with "Bitna" logo
+  - App header with "Contaboo" logo
   - Login and Join buttons in header
   - "Find Your Dream Property" subtitle
   - Search bar (UI only, not functional yet)
@@ -54,12 +54,12 @@ Phase 3 implements the complete **public-facing frontend** of Bitna - the first 
 #### 4. **Login Screen** 🔐
 - **File:** `/mobile/src/screens/public/LoginScreen.tsx`
 - **Features:**
-  - Bitna branding and welcome message
+  - Contaboo branding and welcome message
   - Mobile number input with +20 country code
   - Phone validation (10 digits required)
   - "Continue with Mobile Number" button
   - Helper text about OTP
-  - "Don't have an account? Join Bitna" link
+  - "Don't have an account? Join Contaboo" link
   - Info badges: 🔒 Secure OTP, 📱 Mobile-Only, ⚡ Quick Login
   - **Note:** OTP flow to be implemented in Phase 4
 
@@ -79,7 +79,7 @@ Phase 3 implements the complete **public-facing frontend** of Bitna - the first 
   - Features comparison lists with ✓ checkmarks
   - "Continue as [Type]" button (disabled until selection)
   - "Already have an account? Login" link
-  - "Why Join Bitna?" info section
+  - "Why Join Contaboo?" info section
   - **Note:** Registration flow to be implemented in Phase 4
 
 ---
@@ -132,7 +132,7 @@ HomeScreen
 │   ├── "Join Now to Contact Agent" → SubscribeScreen
 │   └── "Already have an account? Login" → LoginScreen
 ├── Header "Login" Button → LoginScreen
-│   └── "Don't have an account? Join Bitna" → SubscribeScreen
+│   └── "Don't have an account? Join Contaboo" → SubscribeScreen
 └── Header "Join" Button → SubscribeScreen
     └── "Already have an account? Login" → LoginScreen
 ```
@@ -163,7 +163,7 @@ Properties include:
 
 1. **Ensure Expo is running:**
    ```bash
-   cd /Users/ahmedgomaa/bitna/mobile
+   cd /Users/ahmedgomaa/contaboo/mobile
    npx expo start
    ```
 
