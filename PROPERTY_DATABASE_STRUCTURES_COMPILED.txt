@@ -1,0 +1,813 @@
+================================================================================
+                    PROPERTY DATABASE STRUCTURES COMPILATION
+                     Extracted from All Documentation Files
+================================================================================
+
+TABLE OF CONTENTS:
+1. Contaboo-Y Property Database Model (Most Comprehensive)
+2. Complete Property Tables Documentation (45 Tables)
+3. GLO CRM Database Structure
+4. ContabooRealEstateCRM Database Structure
+5. Multi-Tenant Architecture
+
+================================================================================
+                    1. CONTABOO-Y PROPERTY DATABASE MODEL
+                          (Most Comprehensive Model)
+================================================================================
+
+MAIN PROPERTY TABLE: "properties"
+--------------------------------------------------------------------------------
+
+PRIMARY IDENTIFICATION:
+- id (String, Primary Key, cuid)
+- propertyNumber (String, Unique, Format: PROP-2025-001)
+- propertyName (String?, Display name)
+
+COMPANY & USER RELATIONSHIPS:
+- companyId (String, FK → companies.id) - Multi-tenant isolation
+- createdById (String, FK → users.id) - Record creator
+- updatedById (String?, FK → users.id) - Last modifier
+- createdAt (DateTime) - Creation timestamp
+- updatedAt (DateTime) - Update timestamp
+
+LOOKUP RELATIONSHIPS (Foreign Keys):
+- propertyTypeId (String?, FK → PropertyTypeLookup)
+- propertyCategoryId (String?, FK → PropertyCategoryLookup)
+- propertySubCategoryId (String?, FK → PropertySubCategory)
+- propertyStatusId (String?, FK → PropertyStatus)
+- regionId (String?, FK → Region)
+- districtId (String?, FK → District)
+- neighborhoodId (String?, FK → Neighborhood)
+- compoundId (String?, FK → Compound)
+
+PHYSICAL SPECIFICATIONS:
+- totalArea (Float?) - Total area in square meters
+- builtArea (Float?) - Built-up area
+- usableArea (Float?) - Usable living area
+- landArea (Float?) - Land plot area
+- balconyArea (Float?) - Balcony/terrace area
+- roomsCount (Int?) - Total number of rooms
+- bedroomsCount (Int?) - Number of bedrooms
+- bathroomsCount (Int?) - Number of bathrooms
+- livingRoomsCount (Int?) - Number of living rooms
+- floorNumber (Int?) - Floor level
+- totalFloorsInBuilding (Int?) - Total floors in building
+- parkingSpotsCount (Int?) - Parking spaces
+- builtYear (Int?) - Year of construction
+- propertyAge (Int?) - Calculated age
+- lastRenovationYear (Int?) - Last renovation year
+
+LOCATION DETAILS:
+- buildingName (String?) - Building/complex name
+- unitNumber (String?) - Unit/apartment number
+- address (String?) - Full address
+- streetAddress (String?) - Street address
+- postalCode (String?) - Postal/ZIP code
+- gpsLatitude (Float?) - GPS coordinates latitude
+- gpsLongitude (Float?) - GPS coordinates longitude
+
+PRICING INFORMATION:
+- salePrice (Float?) - Sale price
+- rentalPriceMonthly (Float?) - Monthly rental price
+- rentalPriceYearly (Float?) - Yearly rental price
+- pricePerSqm (Float?) - Price per square meter
+- depositAmount (Float?) - Security deposit
+- serviceCharges (Float?) - Monthly service charges
+- maintenanceFee (Float?) - Maintenance fees
+- propertyTaxes (Float?) - Property tax amount
+- currencyId (String?, FK → Currency)
+
+PROPERTY FEATURES (Boolean Fields):
+- elevatorAvailable (Boolean?) - Has elevator access
+- gardenAvailable (Boolean?) - Has garden/yard
+- garageAvailable (Boolean?) - Has garage
+- swimmingPoolAccess (Boolean?) - Swimming pool access
+- electricityConnection (Boolean?) - Electricity connected
+- waterConnection (Boolean?) - Water supply connected
+- gasConnection (Boolean?) - Gas connection available
+- internetConnection (Boolean?) - Internet connectivity
+- landlineConnection (Boolean?) - Landline phone available
+- satelliteCableTV (Boolean?) - Cable/satellite TV
+
+OWNERSHIP & LEGAL:
+- titleDeedNumber (String?) - Property title deed number
+- registrationNumber (String?) - Government registration number
+- propertyTaxID (String?) - Tax identification number
+- legalIssues (Boolean?) - Has legal complications
+- ownerName (String?) - Property owner name
+- ownerMobile (String?) - Owner mobile number
+- ownerTelephone (String?) - Owner landline number
+- ownerEmail (String?) - Owner email address
+
+MANAGEMENT & ASSIGNMENT:
+- assignedHandlerId (String?, FK → users.id) - Assigned handler
+- salesRepresentativeId (String?, FK → users.id) - Sales representative
+- propertyManagerId (String?, FK → users.id) - Property manager
+- emergencyContact (String?) - Emergency contact information
+- maintenanceContact (String?) - Maintenance contact details
+
+MARKETING & MEDIA:
+- description (String?) - Property description
+- specialInstructions (String?) - Special viewing instructions
+- internalNotes (String?) - Internal staff notes
+- virtualTourUrl (String?) - Virtual tour link
+- videoUrl (String?) - Property video link
+- featuredProperty (Boolean?) - Featured in listings
+- websiteListing (Boolean?) - Listed on website
+- socialMediaPosted (Boolean?) - Posted on social media
+- virtualTourAvailable (Boolean?) - Virtual tour available
+- videoAvailable (Boolean?) - Video available
+- brochureAvailable (Boolean?) - Brochure created
+
+================================================================================
+          2. COMPLETE PROPERTY DATABASE TABLES (45 TOTAL TABLES)
+================================================================================
+
+CATEGORY 1: CORE PROPERTY TABLE (1 table)
+--------------------------------------------------------------------------------
+1. properties (Property Model) - Main property table with all listings
+
+CATEGORY 2: PROPERTY TYPE AND CATEGORY TABLES (5 tables)
+--------------------------------------------------------------------------------
+2. property_types (PropertyTypeLookup)
+   - Apartment, Villa, Office, Warehouse, Shop, Medical, etc.
+
+3. property_categories (PropertyCategoryLookup)
+   - Residential, Commercial, Industrial
+
+4. property_sub_categories (PropertySubCategory)
+   - Detailed sub-classification
+
+5. compound_types (CompoundType)
+   - Types of compounds/complexes
+
+6. payment_types (PaymentType)
+   - Payment method types
+
+CATEGORY 3: LOCATION AND GEOGRAPHIC TABLES (2 tables)
+--------------------------------------------------------------------------------
+7. regions (Region)
+   - Geographic regions
+
+8. districts (District)
+   - Districts within regions
+
+CATEGORY 4: PROPERTY STATUS AND CONDITION TABLES (10 tables)
+--------------------------------------------------------------------------------
+9. property_status (PropertyStatus)
+   - Available, Sold, Rented, Under Maintenance
+
+10. finished_status (FinishedStatus)
+    - Property finishing status
+
+11. property_conditions (PropertyCondition)
+    - Excellent, Good, Fair, Poor
+
+12. construction_status (ConstructionStatus)
+    - Completed, Under Construction, Planned
+
+13. furnishing_status (FurnishingStatus)
+    - Furnished, Semi-Furnished, Unfurnished
+
+14. availability_status (AvailabilityStatus)
+    - Current availability with colors
+
+15. verification_status (VerificationStatus)
+    - Property verification status
+
+16. record_status (RecordStatus)
+    - Active, Inactive, Pending
+
+17. ownership_status (OwnershipStatus)
+    - Owned, Leased, Managed
+
+18. mortgage_status (MortgageStatus)
+    - Mortgage and financing status
+
+CATEGORY 5: PROPERTY FEATURES AND SPECIFICATIONS TABLES (11 tables)
+--------------------------------------------------------------------------------
+19. view_types (ViewType)
+    - Sea View, City View, Garden View
+
+20. orientations (Orientation)
+    - North, South, East, West facing
+
+21. air_conditioning_types (AirConditioningType)
+    - AC system types
+
+22. heating_systems (HeatingSystem)
+    - Heating system types
+
+23. security_systems (SecuritySystem)
+    - Security features
+
+24. pet_policies (PetPolicy)
+    - Pet policies for rentals
+
+25. smoking_policies (SmokingPolicy)
+    - Smoking policies
+
+26. owner_types (OwnerType)
+    - Individual, Corporate, Government
+
+27. investment_types (InvestmentType)
+    - Property investment types
+
+28. target_markets (TargetMarket)
+    - Market segments
+
+29. data_sources (DataSource)
+    - Sources of property listings
+
+CATEGORY 6: PROPERTY MANAGEMENT AND BUSINESS TABLES (5 tables)
+--------------------------------------------------------------------------------
+30. priority_levels (PriorityLevel)
+    - Priority handling levels with colors
+
+31. marketing_phases (MarketingPhase)
+    - Marketing strategies and phases
+
+32. minimum_rental_periods (MinimumRentalPeriod)
+    - Minimum rental period requirements
+
+33. payment_schedules (PaymentSchedule)
+    - Payment schedule options
+
+34. listing_purposes (ListingPurpose)
+    - Sale, Rent, Investment
+
+CATEGORY 7: PROPERTY DETAIL AND RELATIONSHIP TABLES (6 tables)
+--------------------------------------------------------------------------------
+35. property_images (PropertyImage)
+    - Photos with metadata, display order, alt text
+
+36. property_features (PropertyFeature)
+    - Specific features and characteristics
+
+37. property_amenities (PropertyAmenity)
+    - Available amenities
+
+38. property_utilities (PropertyUtility)
+    Fields: Electricity, Water, Gas, Internet, Landline, Satellite TV
+    Details: Connection status, provider, account numbers, monthly fees
+
+39. property_distances (PropertyDistance)
+    Fields: Metro, Airport, Hospital, School, Mall, Mosque, Bank, Restaurant
+    Details: Distance in KM, travel time, transport mode
+
+40. property_call_logs (PropertyCallLog)
+    - Communication records
+
+CATEGORY 8: PROPERTY ACTIVITY AND MANAGEMENT TABLES (5 tables)
+--------------------------------------------------------------------------------
+41. property_advertisements (PropertyAdvertisement)
+    - Advertisement campaigns
+
+42. property_activities (PropertyActivity)
+    - General activity logs
+
+43. property_audit_logs (PropertyAuditLog)
+    - Complete audit trail
+
+44. property_managers (PropertyManager)
+    - Management assignments
+
+45. property_agents (PropertyAgent)
+    - Agent assignments for sales/rentals
+
+================================================================================
+                      3. GLO CRM DATABASE STRUCTURE
+================================================================================
+
+USER TABLE:
+--------------------------------------------------------------------------------
+- id (int, PK)
+- username (string)
+- email (string)
+- first_name (string)
+- last_name (string)
+- password (string)
+- role (string) - manager|sales|agent|employee
+- property_access (string) - all|commercial|residential|none
+- department (string)
+- phone (string)
+- is_superuser (boolean)
+- is_staff (boolean)
+- is_active (boolean)
+- created_at (datetime)
+- updated_at (datetime)
+- last_login (datetime)
+- date_joined (datetime)
+
+PROPERTY TABLE:
+--------------------------------------------------------------------------------
+- id (int, PK)
+- uuid property_id
+- building (int)
+- property_number (string)
+- the_floors (int)
+- unit_features (text)
+- phase (int)
+- note (text)
+- in_or_outside_compound (string) - inside|outside
+- description (text)
+- last_follow_in (date)
+- status_id (int, FK)
+- property_offered_by_id (int, FK)
+- name (string)
+- unit_no (string)
+- call_update (date)
+- handler_id (int, FK → USER)
+- sales_id (int, FK → USER)
+- created_at (datetime)
+- updated_at (datetime)
+- land_area (decimal)
+- rent_from (date)
+- rent_to (date)
+- compound_id (int, FK)
+- liked (boolean)
+- in_home (boolean)
+- rooms (int)
+- mobile_no (string)
+- tel (string)
+- total_price (decimal)
+- price_per_meter (decimal)
+- property_image (text)
+- videos (text)
+- project_id (int, FK)
+- installment (decimal)
+- payed_every (string) - monthly|quarterly|semiannual|annual
+- monthly (decimal)
+- down_payment (decimal)
+- space_unit (decimal)
+- space_guard (decimal)
+- location (string)
+- region_id (int, FK)
+- property_type_id (int, FK)
+- classification_id (int, FK)
+- finishing_id (int, FK)
+- currency_id (int, FK)
+- category_id (int, FK)
+- activity (string)
+- built_area (decimal)
+- bedrooms_count (int)
+
+PROPERTY CLASSIFICATION:
+--------------------------------------------------------------------------------
+- id (int, PK)
+- name (string) - commercial|residential
+- description (text)
+- created_at (datetime)
+- updated_at (datetime)
+
+PROPERTY TYPE:
+--------------------------------------------------------------------------------
+- id (int, PK)
+- name (string) - Apartment|Villa|Office|Shop|Medical|etc
+- created_at (datetime)
+- updated_at (datetime)
+
+PROPERTY IMAGE:
+--------------------------------------------------------------------------------
+- id (int, PK)
+- property_id (int, FK)
+- image (string)
+- caption (string)
+- is_primary (boolean)
+- order (int)
+- uploaded_at (datetime)
+
+PROPERTY DOCUMENT:
+--------------------------------------------------------------------------------
+- id (int, PK)
+- property_id (int, FK)
+- document_type (string) - DD|PL|PM|IN|CT|OT
+  DD = Deed Document
+  PL = Property License
+  PM = Property Map
+  IN = Inspection Report
+  CT = Contract
+  OT = Other
+- file (string)
+- title (string)
+- description (text)
+- uploaded_by_id (int, FK → USER)
+- uploaded_at (datetime)
+
+LOCATION HIERARCHY:
+--------------------------------------------------------------------------------
+COMPOUND:
+- id (int, PK)
+- name (string)
+- created_at (datetime)
+- updated_at (datetime)
+
+PROJECT:
+- id (int, PK)
+- name (string)
+- created_at (datetime)
+- updated_at (datetime)
+
+REGION:
+- id (int, PK)
+- name (string)
+- created_at (datetime)
+- updated_at (datetime)
+
+FINISHING LEVEL:
+- id (int, PK)
+- name (string)
+- created_at (datetime)
+- updated_at (datetime)
+
+CURRENCY:
+- id (int, PK)
+- code (string) - USD|EGP|EUR
+- symbol (string) - $|£|€
+- created_at (datetime)
+- updated_at (datetime)
+
+STATUS:
+- id (int, PK)
+- name (string)
+- created_at (datetime)
+- updated_at (datetime)
+
+OFFERED BY:
+- id (int, PK)
+- name (string)
+- created_at (datetime)
+- updated_at (datetime)
+
+================================================================================
+                4. CONTABOOREALESTATECRM DATABASE STRUCTURE
+================================================================================
+
+LEAD TABLE STRUCTURE:
+--------------------------------------------------------------------------------
+CREATE TABLE lead (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255),
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    source VARCHAR(100),
+    status VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Property Data Fields
+    property_type VARCHAR(100),
+    location VARCHAR(255),
+    budget DECIMAL(15,2),
+    bedrooms INT,
+    bathrooms INT,
+    preferred_area DECIMAL(10,2),
+    
+    -- Lead Management
+    assigned_to_user_id BIGINT,
+    priority VARCHAR(20),
+    notes TEXT,
+    
+    -- Foreign Keys
+    FOREIGN KEY (assigned_to_user_id) REFERENCES user(id)
+);
+
+PROPERTY DATA FIELDS (From Lead Table):
+--------------------------------------------------------------------------------
+- property_type (VARCHAR 100) - Type of property interested in
+- location (VARCHAR 255) - Preferred location
+- budget (DECIMAL 15,2) - Budget range
+- bedrooms (INT) - Number of bedrooms required
+- bathrooms (INT) - Number of bathrooms required
+- preferred_area (DECIMAL 10,2) - Preferred area size
+
+================================================================================
+                    5. MULTI-TENANT ARCHITECTURE TABLES
+================================================================================
+
+COMPANIES TABLE (Multi-tenant root):
+--------------------------------------------------------------------------------
+- id (UUID, PK)
+- name (VARCHAR 255) - Company name
+- email (VARCHAR 255) - Company email
+- phone (VARCHAR 50) - Company phone
+- address (TEXT) - Company address
+- website (VARCHAR 255) - Company website
+- logo_url (TEXT) - Company logo
+- subscription_plan (VARCHAR 50) - basic|premium|enterprise
+- is_active (BOOLEAN) - Company status
+- created_at (TIMESTAMPTZ)
+- updated_at (TIMESTAMPTZ)
+
+USERS TABLE (Enhanced with company):
+--------------------------------------------------------------------------------
+- id (UUID, PK)
+- company_id (UUID, FK → companies.id) - TENANT ISOLATION
+- email (VARCHAR 255, UNIQUE)
+- first_name (VARCHAR 100)
+- last_name (VARCHAR 100)
+- phone (VARCHAR 50)
+- avatar_url (TEXT)
+- profile_id (UUID, FK → user_profiles.id)
+- is_active (BOOLEAN)
+- last_login_at (TIMESTAMPTZ)
+- created_at (TIMESTAMPTZ)
+- updated_at (TIMESTAMPTZ)
+
+PROPERTIES TABLE (Multi-tenant enhanced):
+--------------------------------------------------------------------------------
+- id (UUID, PK)
+- company_id (UUID, FK → companies.id) - TENANT ISOLATION
+- created_by (UUID, FK → users.id) - OWNERSHIP
+- assigned_to (UUID, FK → users.id) - ASSIGNMENT
+
+Property Data Fields:
+- title (VARCHAR 255)
+- description (TEXT)
+- property_type (VARCHAR 50)
+- listing_type (VARCHAR 50) - sale|rent
+- price (DECIMAL 15,2) - SENSITIVE
+- area (DECIMAL 10,2)
+- bedrooms (INTEGER)
+- bathrooms (INTEGER)
+- address (TEXT)
+- city (VARCHAR 100)
+- country (VARCHAR 100)
+- latitude (DECIMAL 10,8)
+- longitude (DECIMAL 11,8)
+- status (VARCHAR 50)
+- is_featured (BOOLEAN)
+- images_urls (TEXT[]) - Array of image URLs
+- created_at (TIMESTAMPTZ)
+- updated_at (TIMESTAMPTZ)
+
+PERMISSION SYSTEM TABLES:
+--------------------------------------------------------------------------------
+
+user_profiles:
+- id (UUID, PK)
+- company_id (UUID, FK → companies.id)
+- name (VARCHAR 100) - Administrator|Sales Agent
+- description (TEXT)
+- color (VARCHAR 7) - #007AFF
+- is_default (BOOLEAN)
+- is_system (BOOLEAN)
+- created_at (TIMESTAMPTZ)
+- updated_at (TIMESTAMPTZ)
+
+modules:
+- id (UUID, PK)
+- name (VARCHAR 50, UNIQUE) - leads|properties|contacts
+- display_name (VARCHAR 100)
+- icon (VARCHAR 50)
+- color (VARCHAR 7)
+- is_active (BOOLEAN)
+- created_at (TIMESTAMPTZ)
+
+module_fields:
+- id (UUID, PK)
+- module_id (UUID, FK → modules.id)
+- field_name (VARCHAR 50) - name|email|phone|mobile
+- display_name (VARCHAR 100)
+- field_type (VARCHAR 50) - text|email|phone|number
+- is_required (BOOLEAN)
+- is_sensitive (BOOLEAN)
+- sort_order (INTEGER)
+- created_at (TIMESTAMPTZ)
+
+profile_module_permissions:
+- id (UUID, PK)
+- profile_id (UUID, FK → user_profiles.id)
+- module_id (UUID, FK → modules.id)
+- can_view (BOOLEAN)
+- can_edit_add (BOOLEAN)
+- can_full_control (BOOLEAN)
+- created_at (TIMESTAMPTZ)
+
+profile_field_permissions:
+- id (UUID, PK)
+- profile_id (UUID, FK → user_profiles.id)
+- module_field_id (UUID, FK → module_fields.id)
+- can_view (BOOLEAN)
+- can_edit (BOOLEAN)
+- created_at (TIMESTAMPTZ)
+
+data_access_rules:
+- id (UUID, PK)
+- company_id (UUID, FK → companies.id)
+- profile_id (UUID, FK → user_profiles.id)
+- module_id (UUID, FK → modules.id)
+- access_type (VARCHAR 50) - own_only|team_only|all_company
+- can_view_others (BOOLEAN)
+- can_edit_others (BOOLEAN)
+- can_delete_others (BOOLEAN)
+- created_at (TIMESTAMPTZ)
+
+AUDIT & LOGGING TABLES:
+--------------------------------------------------------------------------------
+
+audit_logs:
+- id (UUID, PK)
+- company_id (UUID, FK → companies.id)
+- user_id (UUID, FK → users.id)
+- action (VARCHAR 50) - CREATE|UPDATE|DELETE|VIEW
+- resource_type (VARCHAR 50) - lead|property|contact|user
+- resource_id (UUID)
+- old_values (JSONB)
+- new_values (JSONB)
+- changed_fields (TEXT[])
+- ip_address (INET)
+- user_agent (TEXT)
+- endpoint (VARCHAR 255)
+- created_at (TIMESTAMPTZ)
+
+user_login_history:
+- id (UUID, PK)
+- user_id (UUID, FK → users.id)
+- company_id (UUID, FK → companies.id)
+- ip_address (INET)
+- user_agent (TEXT)
+- device_type (VARCHAR 50)
+- location (VARCHAR 100)
+- login_at (TIMESTAMPTZ)
+- logout_at (TIMESTAMPTZ)
+- session_duration (INTEGER) - in minutes
+- is_successful (BOOLEAN)
+- failure_reason (TEXT)
+
+field_access_logs:
+- id (UUID, PK)
+- company_id (UUID, FK → companies.id)
+- user_id (UUID, FK → users.id)
+- resource_type (VARCHAR 50) - lead|property|contact
+- resource_id (UUID)
+- field_name (VARCHAR 50) - mobile|email|budget
+- access_type (VARCHAR 20) - view|edit
+- ip_address (INET)
+- created_at (TIMESTAMPTZ)
+
+================================================================================
+                            KEY RELATIONSHIPS
+================================================================================
+
+PROPERTY RELATIONSHIPS:
+Properties → Companies (Multi-tenant isolation)
+Properties → Users (Created by, Assigned to, Sales rep, Property manager)
+Properties → PropertyTypeLookup (Type classification)
+Properties → PropertyCategoryLookup (Category classification)
+Properties → PropertyStatus (Current status)
+Properties → Region/District/Neighborhood (Location hierarchy)
+Properties → Compound (Complex location)
+Properties → Currency (Pricing currency)
+Properties → PropertyImages (One-to-many photos)
+Properties → PropertyDocuments (One-to-many documents)
+Properties → PropertyUtilities (One-to-many utility connections)
+Properties → PropertyDistances (One-to-many distance records)
+Properties → PropertyAmenities (Many-to-many amenities)
+Properties → PropertyFeatures (Many-to-many features)
+
+USER RELATIONSHIPS:
+Users → Companies (Company membership)
+Users → UserProfiles (Role/permissions)
+Users → Teams (Team membership)
+Users → Properties (Created, Assigned, Managing)
+Users → AuditLogs (Action history)
+Users → LoginHistory (Login sessions)
+
+LOCATION HIERARCHY:
+Region → District (One-to-many)
+District → Neighborhood (One-to-many)
+Neighborhood → Compound (One-to-many)
+Compound → Properties (One-to-many)
+
+================================================================================
+                        SECURITY & DATA ISOLATION
+================================================================================
+
+MULTI-TENANT ISOLATION:
+✅ All property data filtered by company_id
+✅ Row Level Security (RLS) enforced at database level
+✅ Users can only access their company's data
+✅ JWT integration with Supabase auth
+
+OWNERSHIP TRACKING:
+✅ created_by field tracks record creator
+✅ assigned_to field tracks current owner
+✅ updated_by field tracks last modifier
+✅ Timestamps for all changes
+
+FIELD-LEVEL SECURITY:
+✅ Profile-based field permissions (hide mobile, email, budget)
+✅ Module-level access control (view, edit, full control)
+✅ Sensitive field access logging
+✅ Granular permission system
+
+AUDIT TRAIL:
+✅ Complete change history (old_values, new_values)
+✅ User action tracking with IP and timestamp
+✅ Login session history
+✅ Field access logging for sensitive data
+
+================================================================================
+                          PERFORMANCE INDEXES
+================================================================================
+
+PRIMARY INDEXES:
+- All tables have primary key indexes (id)
+- Unique constraints on propertyNumber, email, companyCode
+- Composite indexes on (company_id, status_id)
+- Foreign key indexes for all relationships
+
+QUERY OPTIMIZATION:
+- Indexes on company_id for multi-tenant filtering
+- Indexes on created_by and assigned_to for ownership queries
+- Indexes on status fields for filtering
+- Indexes on date fields for time-based queries
+- Full-text search indexes on description and notes
+
+================================================================================
+                        API ENDPOINT REFERENCE
+================================================================================
+
+PROPERTY ENDPOINTS:
+GET    /api/properties          - List properties (paginated, filtered by company)
+POST   /api/properties          - Create new property
+GET    /api/properties/[id]     - Get single property with relationships
+PUT    /api/properties/[id]     - Update property
+DELETE /api/properties/[id]     - Delete property (soft delete)
+POST   /api/properties/import   - Bulk import properties
+GET    /api/properties/export   - Export properties to CSV
+GET    /api/properties/lookups  - Get all lookup data (cached)
+
+LOOKUP ENDPOINTS:
+GET    /api/lookups/property-types      - Get property types
+GET    /api/lookups/property-statuses   - Get property statuses
+GET    /api/lookups/regions             - Get regions
+GET    /api/lookups/districts           - Get districts by region
+GET    /api/lookups/compounds           - Get compounds
+
+================================================================================
+                    COMMON DATA PATTERNS & VALUES
+================================================================================
+
+PROPERTY TYPES:
+- Apartment
+- Villa
+- Townhouse
+- Penthouse
+- Duplex
+- Studio
+- Office
+- Shop
+- Warehouse
+- Medical
+- Clinic
+- Showroom
+- Land
+- Farm
+- Building
+
+PROPERTY CATEGORIES:
+- Residential
+- Commercial
+- Industrial
+- Mixed-Use
+- Agricultural
+
+PROPERTY STATUS:
+- Available
+- Reserved
+- Sold
+- Rented
+- Under Maintenance
+- Off Market
+- Pending
+- Draft
+
+FURNISHING STATUS:
+- Furnished
+- Semi-Furnished
+- Unfurnished
+
+CONSTRUCTION STATUS:
+- Completed
+- Under Construction
+- Planned
+- Shell and Core
+
+LISTING PURPOSE:
+- For Sale
+- For Rent
+- For Investment
+- For Auction
+
+PAYMENT FREQUENCIES:
+- Monthly
+- Quarterly
+- Semi-Annual
+- Annual
+- One-Time
+
+================================================================================
+                              END OF DOCUMENT
+================================================================================
