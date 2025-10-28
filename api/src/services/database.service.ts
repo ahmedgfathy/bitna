@@ -129,30 +129,38 @@ export const getUsersByTenant = async (tenantId: string) => {
 
 // Create a property (tenant-scoped)
 export const createProperty = async (data: {
-  title: string;
+  property_name?: string;
+  title?: string;
   description?: string;
-  price: number;
-  latitude: number;
-  longitude: number;
+  sale_price?: number;
+  rental_price_monthly?: number;
+  gps_latitude?: number;
+  gps_longitude?: number;
   address?: string;
-  bedrooms?: number;
-  bathrooms?: number;
-  area?: number;
-  propertyTypeId?: string;
-  regionId?: string;
-  categoryId?: string;
-  listingStatusId?: string;
-  tenantId: string;
-  createdById: string;
+  bedrooms_count?: number;
+  bathrooms_count?: number;
+  total_area?: number;
+  type_id?: string;
+  region_id?: string;
+  category_id?: string;
+  status_id?: string;
+  finishing_status_id?: string;
+  company_id: string;
+  created_by_id: string;
 }) => {
   return await prisma.property.create({
-    data,
+    data: {
+      ...data,
+      property_number: `PROP-${Date.now()}`, // Generate property number
+      updated_at: new Date()
+    },
     include: {
-      propertyType: true,
-      region: true,
-      category: true,
-      listingStatus: true,
-      createdBy: {
+      property_types: true,
+      regions: true,
+      property_categories: true,
+      property_statuses: true,
+      finishing_statuses: true,
+      users_properties_created_by_idTousers: {
         select: {
           id: true,
           name: true,
@@ -163,23 +171,29 @@ export const createProperty = async (data: {
   });
 };
 
-// Get all properties for a tenant
+// Get all properties for a tenant (company)
 export const getPropertiesByTenant = async (tenantId: string) => {
   return await prisma.property.findMany({
-    where: { tenantId },
+    where: { company_id: tenantId },
     include: {
-      propertyType: true,
-      region: true,
-      category: true,
-      listingStatus: true,
-      createdBy: {
+      property_types: true,
+      property_statuses: true,
+      property_categories: true,
+      regions: true,
+      districts: true,
+      finishing_statuses: true,
+      property_images: {
+        orderBy: { display_order: 'asc' },
+        take: 5
+      },
+      users_properties_created_by_idTousers: {
         select: {
           id: true,
           name: true,
         },
       },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { created_at: 'desc' },
   });
 };
 
@@ -193,20 +207,37 @@ export const getPublicProperties = async (filters?: {
 }) => {
   return await prisma.property.findMany({
     where: {
-      isPublic: true,
-      ...(filters?.propertyTypeId && { propertyTypeId: filters.propertyTypeId }),
-      ...(filters?.regionId && { regionId: filters.regionId }),
-      ...(filters?.categoryId && { categoryId: filters.categoryId }),
-      ...(filters?.minPrice && { price: { gte: filters.minPrice } }),
-      ...(filters?.maxPrice && { price: { lte: filters.maxPrice } }),
+      is_published: true,
+      show_on_website: true,
+      is_deleted: false,
+      ...(filters?.propertyTypeId && { type_id: filters.propertyTypeId }),
+      ...(filters?.regionId && { region_id: filters.regionId }),
+      ...(filters?.categoryId && { category_id: filters.categoryId }),
+      ...(filters?.minPrice && {
+        OR: [
+          { sale_price: { gte: filters.minPrice } },
+          { rental_price_monthly: { gte: filters.minPrice } }
+        ]
+      }),
+      ...(filters?.maxPrice && {
+        OR: [
+          { sale_price: { lte: filters.maxPrice } },
+          { rental_price_monthly: { lte: filters.maxPrice } }
+        ]
+      }),
     },
     include: {
-      propertyType: true,
-      region: true,
-      category: true,
-      listingStatus: true,
+      property_types: true,
+      property_statuses: true,
+      property_categories: true,
+      regions: true,
+      finishing_statuses: true,
+      property_images: {
+        orderBy: { display_order: 'asc' },
+        take: 1
+      }
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { created_at: 'desc' },
   });
 };
 
@@ -223,20 +254,23 @@ export const getNearestProperties = async (
 
   return await prisma.property.findMany({
     where: {
-      isPublic: true,
-      latitude: {
+      is_published: true,
+      show_on_website: true,
+      is_deleted: false,
+      gps_latitude: {
         gte: latitude - latDelta,
         lte: latitude + latDelta,
       },
-      longitude: {
+      gps_longitude: {
         gte: longitude - lonDelta,
         lte: longitude + lonDelta,
       },
     },
     include: {
-      propertyType: true,
-      region: true,
-      category: true,
+      property_types: true,
+      regions: true,
+      property_categories: true,
+      property_statuses: true,
     },
     take: 50,
   });
@@ -245,15 +279,17 @@ export const getNearestProperties = async (
 // Toggle property public visibility
 export const togglePropertyVisibility = async (
   propertyId: string,
-  tenantId: string,
-  isPublic: boolean
+  _tenantId: string, // Kept for backwards compatibility but not used
+  isPublished: boolean
 ) => {
   return await prisma.property.update({
     where: {
       id: propertyId,
-      tenantId, // Ensure tenant isolation
     },
-    data: { isPublic },
+    data: { 
+      is_published: isPublished,
+      show_on_website: isPublished
+    },
   });
 };
 
@@ -324,13 +360,13 @@ export const getLeadsByUser = async (userId: string, tenantId: string) => {
 // Property Types
 export const createPropertyType = async (name: string, tenantId: string) => {
   return await prisma.propertyType.create({
-    data: { name, tenantId },
+    data: { name, company_id: tenantId, updated_at: new Date() },
   });
 };
 
 export const getPropertyTypes = async (tenantId: string) => {
   return await prisma.propertyType.findMany({
-    where: { tenantId, isActive: true },
+    where: { company_id: tenantId, is_active: true },
     orderBy: { name: 'asc' },
   });
 };
@@ -338,41 +374,85 @@ export const getPropertyTypes = async (tenantId: string) => {
 // Regions
 export const createRegion = async (name: string, tenantId: string) => {
   return await prisma.region.create({
-    data: { name, tenantId },
+    data: { name, company_id: tenantId, updated_at: new Date() },
   });
 };
 
 export const getRegions = async (tenantId: string) => {
   return await prisma.region.findMany({
-    where: { tenantId, isActive: true },
-    orderBy: { name: 'asc' },
+    where: { company_id: tenantId, is_active: true },
+    orderBy: { display_name: 'asc' },
   });
 };
 
 // Categories
 export const createCategory = async (name: string, tenantId: string) => {
-  return await prisma.category.create({
-    data: { name, tenantId },
+  const { randomUUID } = require('crypto');
+  return await prisma.property_categories.create({
+    data: { 
+      id: randomUUID(),
+      name, 
+      company_id: tenantId,
+      updated_at: new Date()
+    },
   });
 };
 
 export const getCategories = async (tenantId: string) => {
-  return await prisma.category.findMany({
-    where: { tenantId, isActive: true },
+  return await prisma.property_categories.findMany({
+    where: { company_id: tenantId, is_active: true },
     orderBy: { name: 'asc' },
   });
 };
 
-// Listing Statuses
-export const createListingStatus = async (name: string, tenantId: string) => {
-  return await prisma.listingStatus.create({
-    data: { name, tenantId },
+// Property Statuses (was Listing Statuses)
+export const createPropertyStatus = async (name: string, tenantId: string) => {
+  const { randomUUID } = require('crypto');
+  return await prisma.property_statuses.create({
+    data: { 
+      id: randomUUID(),
+      name, 
+      company_id: tenantId,
+      updated_at: new Date()
+    },
   });
 };
 
-export const getListingStatuses = async (tenantId: string) => {
-  return await prisma.listingStatus.findMany({
-    where: { tenantId, isActive: true },
+export const getPropertyStatuses = async (tenantId: string) => {
+  return await prisma.property_statuses.findMany({
+    where: { company_id: tenantId, is_active: true },
+    orderBy: { name: 'asc' },
+  });
+};
+
+// Finishing Statuses (NEW)
+export const getFinishingStatuses = async (tenantId: string) => {
+  return await prisma.finishing_statuses.findMany({
+    where: { company_id: tenantId, is_active: true },
+    orderBy: { name: 'asc' },
+  });
+};
+
+// Districts (NEW)
+export const getDistricts = async (tenantId: string, regionId?: string) => {
+  return await prisma.districts.findMany({
+    where: { 
+      company_id: tenantId, 
+      is_active: true,
+      ...(regionId && { region_id: regionId })
+    },
+    orderBy: { name: 'asc' },
+  });
+};
+
+// Compounds (NEW)
+export const getCompounds = async (tenantId: string, districtId?: string) => {
+  return await prisma.compounds.findMany({
+    where: { 
+      company_id: tenantId, 
+      is_active: true,
+      ...(districtId && { district_id: districtId })
+    },
     orderBy: { name: 'asc' },
   });
 };

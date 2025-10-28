@@ -36,6 +36,10 @@ Thumbs.db
 # Prisma
 **/prisma/migrations/**/*.sql
 
+# Large SQL backups (use .sql.gz instead)
+all_databases_backup.sql
+**/backups/*.sql
+
 # Temporary files
 *.tmp
 *.temp
