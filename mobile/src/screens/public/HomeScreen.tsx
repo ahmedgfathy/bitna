@@ -17,10 +17,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { PublicStackParamList, PropertyType } from '../../types/navigation';
 import theme from '../../config/theme';
 import FilterBar from '../../components/FilterBar';
-import FeaturedPropertiesSection from '../../components/FeaturedPropertiesSection';
-import TopCompoundsSection from '../../components/TopCompoundsSection';
-import TopRegionsSection from '../../components/TopRegionsSection';
-import TopAgentsSection from '../../components/TopAgentsSection';
 import apiService from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -28,7 +24,7 @@ type HomeScreenProps = {
   navigation: NativeStackNavigationProp<PublicStackParamList, 'Home'>;
 };
 
-type TabType = 'home' | 'featured' | 'chat';
+type TabType = 'all' | 'featured' | 'projects' | 'community';
 
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -38,7 +34,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = !!user;
   
-  const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [activeTab, setActiveTab] = useState<TabType>('all');
   const [properties, setProperties] = useState<PropertyType[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<PropertyType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,10 +50,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const MOCK_REGIONS: any[] = [];
   const MOCK_PROPERTY_TYPES: any[] = [];
   const MOCK_CATEGORIES: any[] = [];
-  const MOCK_FEATURED_PROPERTIES: any[] = [];
-  const MOCK_TOP_COMPOUNDS: any[] = [];
-  const MOCK_TOP_REGIONS: any[] = [];
-  const MOCK_TOP_AGENTS: any[] = [];
 
   useEffect(() => {
     loadProperties();
@@ -82,6 +74,12 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   };
 
   const filterProperties = () => {
+    // Safety check - ensure properties is an array
+    if (!properties || !Array.isArray(properties)) {
+      setFilteredProperties([]);
+      return;
+    }
+
     let filtered = properties;
 
     // Apply search query
@@ -184,7 +182,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               <View style={styles.logoCircle}>
                 <Text style={styles.logoLetter}>C</Text>
               </View>
-              <Text style={styles.logoTextMain}>Contaboo</Text>
+              {isDesktop && <Text style={styles.logoTextMain}>Contaboo</Text>}
             </TouchableOpacity>
 
             {/* Search Bar - Desktop Only */}
@@ -217,6 +215,18 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 </TouchableOpacity>
               </View>
             )}
+
+            {/* Dashboard Button - Desktop - Only show when logged in */}
+            {isDesktop && isLoggedIn && (
+              <View style={styles.headerButtons}>
+                <TouchableOpacity
+                  style={styles.dashboardButton}
+                  onPress={() => navigation.navigate('Dashboard' as never)}
+                >
+                  <Text style={styles.dashboardButtonText}>🏠 Dashboard</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             
             {/* Mobile Auth Icon Buttons - Only show when not logged in */}
             {!isDesktop && !isLoggedIn && (
@@ -235,6 +245,28 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 </TouchableOpacity>
               </View>
             )}
+
+            {/* Mobile Dashboard Button - Only show when logged in */}
+            {!isDesktop && isLoggedIn && (
+              <View style={styles.mobileRightButtons}>
+                <TouchableOpacity 
+                  style={styles.mobileDashboardButton}
+                  onPress={() => navigation.navigate('Dashboard' as never)}
+                >
+                  <Text style={styles.mobileDashboardText}>🏠</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.mobileLangButton}
+                  onPress={() => {
+                    // Toggle language
+                    const currentLang = 'en'; // Get from language store
+                    console.log('Toggle language');
+                  }}
+                >
+                  <Text style={styles.mobileLangText}>🌐</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           {/* Mobile Search Bar - Below header row */}
@@ -250,95 +282,78 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             </View>
           )}
 
-          {/* Tabs - Icons Only */}
+          {/* Tabs - Responsive: Icons on Mobile, Text on Desktop */}
           <View style={styles.tabsContainer}>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'home' && styles.tabActive]}
-              onPress={() => setActiveTab('home')}
-            >
-              <Text style={[styles.tabIcon, activeTab === 'home' && styles.tabIconActive]}>
-                🏠
-              </Text>
-              {activeTab === 'home' && <View style={styles.tabIndicator} />}
+            <TouchableOpacity style={styles.tab} onPress={() => setActiveTab('all')}>
+              {isDesktop ? (
+                <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>
+                  All Properties
+                </Text>
+              ) : (
+                <Text style={[styles.tabIcon, activeTab === 'all' && styles.tabIconActive]}>
+                  🏠
+                </Text>
+              )}
+              {activeTab === 'all' && <View style={styles.tabIndicator} />}
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'featured' && styles.tabActive]}
-              onPress={() => setActiveTab('featured')}
-            >
-              <Text style={[styles.tabIcon, activeTab === 'featured' && styles.tabIconActive]}>
-                ⭐
-              </Text>
+            
+            <TouchableOpacity style={styles.tab} onPress={() => setActiveTab('featured')}>
+              {isDesktop ? (
+                <Text style={[styles.tabText, activeTab === 'featured' && styles.tabTextActive]}>
+                  Featured
+                </Text>
+              ) : (
+                <Text style={[styles.tabIcon, activeTab === 'featured' && styles.tabIconActive]}>
+                  ⭐
+                </Text>
+              )}
               {activeTab === 'featured' && <View style={styles.tabIndicator} />}
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'chat' && styles.tabActive]}
-              onPress={() => setActiveTab('chat')}
-            >
-              <Text style={[styles.tabIcon, activeTab === 'chat' && styles.tabIconActive]}>
-                💬
-              </Text>
-              {activeTab === 'chat' && <View style={styles.tabIndicator} />}
+            
+            <TouchableOpacity style={styles.tab} onPress={() => setActiveTab('projects')}>
+              {isDesktop ? (
+                <Text style={[styles.tabText, activeTab === 'projects' && styles.tabTextActive]}>
+                  Projects
+                </Text>
+              ) : (
+                <Text style={[styles.tabIcon, activeTab === 'projects' && styles.tabIconActive]}>
+                  🏢
+                </Text>
+              )}
+              {activeTab === 'projects' && <View style={styles.tabIndicator} />}
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.tab} onPress={() => setActiveTab('community')}>
+              {isDesktop ? (
+                <Text style={[styles.tabText, activeTab === 'community' && styles.tabTextActive]}>
+                  Community
+                </Text>
+              ) : (
+                <Text style={[styles.tabIcon, activeTab === 'community' && styles.tabIconActive]}>
+                  💬
+                </Text>
+              )}
+              {activeTab === 'community' && <View style={styles.tabIndicator} />}
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Main Content Container (centered on desktop) */}
         <View style={[styles.contentContainer, isDesktop && styles.contentContainerDesktop]}>
-          {activeTab === 'home' && (
+          {activeTab === 'all' && (
             <>
-              {/* Featured Properties */}
-              <FeaturedPropertiesSection
-                properties={MOCK_FEATURED_PROPERTIES}
-                onPropertyPress={(propertyId) =>
-                  navigation.navigate('PropertyDetails', { propertyId })
-                }
-                onViewAll={() => {}}
-              />
-
-              {/* Top Compounds */}
-              <TopCompoundsSection
-                compounds={MOCK_TOP_COMPOUNDS}
-                onCompoundPress={(compoundId) => console.log('Compound:', compoundId)}
-                onViewAll={() => {}}
-              />
-
-              {/* Top Regions */}
-              <TopRegionsSection
-                regions={MOCK_TOP_REGIONS}
-                onRegionPress={(regionId) => console.log('Region:', regionId)}
-                onViewAll={() => {}}
-              />
-
-              {/* Top Agents */}
-              <TopAgentsSection
-                agents={MOCK_TOP_AGENTS}
-                onAgentPress={(agentId) => console.log('Agent:', agentId)}
-                onViewAll={() => {}}
-              />
-
-              {/* All Properties Section */}
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>
-                    🏢 All Properties
-                    {filteredProperties.length > 0 && (
-                      <Text style={styles.propertyCount}> ({filteredProperties.length})</Text>
-                    )}
+              {/* Clean Property Feed - Facebook Style */}
+              {!filteredProperties || filteredProperties.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateText}>
+                    No properties found matching your criteria
                   </Text>
                 </View>
-
-                {filteredProperties.length === 0 ? (
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyStateText}>
-                      No properties found matching your criteria
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={[styles.propertiesGrid, isDesktop && styles.propertiesGridDesktop]}>
-                    {filteredProperties.map(renderPropertyCard)}
-                  </View>
-                )}
-              </View>
+              ) : (
+                <View style={[styles.propertiesGrid, isDesktop && styles.propertiesGridDesktop]}>
+                  {filteredProperties.map(renderPropertyCard)}
+                </View>
+              )}
             </>
           )}
 
@@ -354,11 +369,23 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             </View>
           )}
 
-          {activeTab === 'chat' && (
+          {activeTab === 'projects' && (
             <View style={styles.tabContent}>
               <View style={styles.comingSoon}>
-                <Text style={styles.comingSoonEmoji}>💬</Text>
-                <Text style={styles.comingSoonTitle}>Community Chat</Text>
+                <Text style={styles.comingSoonEmoji}>🏗️</Text>
+                <Text style={styles.comingSoonTitle}>Top Projects</Text>
+                <Text style={styles.comingSoonText}>
+                  Featured real estate projects and developments will appear here
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {activeTab === 'community' && (
+            <View style={styles.tabContent}>
+              <View style={styles.comingSoon}>
+                <Text style={styles.comingSoonEmoji}>�</Text>
+                <Text style={styles.comingSoonTitle}>People Talk</Text>
                 <Text style={styles.comingSoonText}>
                   Connect with other users, share announcements, and chat about properties
                 </Text>
@@ -405,7 +432,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#f0f2f5',
   },
   desktopLayout: {
     flex: 1,
@@ -514,6 +541,44 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 15,
   },
+  dashboardButton: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: 10,
+    borderRadius: 6,
+    backgroundColor: '#1877f2',
+  },
+  dashboardButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  mobileDashboardButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#1877f2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mobileDashboardText: {
+    fontSize: 18,
+  },
+  mobileRightButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginLeft: 'auto',
+  },
+  mobileLangButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#e7f3ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mobileLangText: {
+    fontSize: 16,
+  },
   mobileAuthButtons: {
     flexDirection: 'row',
     gap: 8,
@@ -577,46 +642,45 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
-    marginTop: theme.spacing.lg,
+    marginTop: 12,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    maxWidth: isDesktop ? 1200 : '100%',
+    borderBottomColor: '#e4e6eb',
+    maxWidth: isDesktop ? '100%' : '100%',
+    backgroundColor: '#fff',
   },
   tab: {
     flex: 1,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 16,
     alignItems: 'center',
+    justifyContent: 'center',
     position: 'relative',
   },
   tabActive: {
-    // Active tab styling handled by indicator
+    // Not needed
   },
   tabText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    color: theme.colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#65676b',
   },
   tabTextActive: {
-    color: theme.colors.primary,
-    fontWeight: theme.typography.fontWeight.semibold,
+    color: '#1877f2',
   },
   tabIcon: {
     fontSize: 24,
-    opacity: 0.6,
+    opacity: 0.7,
   },
   tabIconActive: {
     opacity: 1,
+    transform: [{ scale: 1.1 }],
   },
   tabIndicator: {
     position: 'absolute',
-    bottom: -1,
+    bottom: 0,
     left: 0,
     right: 0,
     height: 3,
-    backgroundColor: theme.colors.primary,
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
+    backgroundColor: '#1877f2',
   },
   searchContainer: {
     flex: isDesktop ? 1 : 0,
@@ -635,91 +699,75 @@ const styles = StyleSheet.create({
     borderColor: '#dddfe2',
   },
   contentContainer: {
-    paddingBottom: theme.spacing.xl,
+    paddingHorizontal: isDesktop ? 0 : 16,
+    paddingTop: 16,
+    paddingBottom: 24,
   },
   contentContainerDesktop: {
-    maxWidth: 1200,
+    maxWidth: 680,
     width: '100%',
     alignSelf: 'center',
   },
-  section: {
-    marginTop: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: theme.typography.fontSize['2xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.textPrimary,
-  },
-  propertyCount: {
-    color: theme.colors.textSecondary,
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.regular,
-  },
   propertiesGrid: {
-    gap: theme.spacing.lg,
+    gap: 0,
   },
   propertiesGridDesktop: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    gap: 0,
   },
   propertyCard: {
     backgroundColor: theme.colors.white,
-    borderRadius: theme.borderRadius.xl,
+    borderRadius: 8,
     overflow: 'hidden',
-    ...theme.shadows.base,
-    marginBottom: theme.spacing.lg,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e4e6eb',
   },
   propertyImage: {
     width: '100%',
-    height: 200,
-    backgroundColor: theme.colors.border,
+    height: 280,
+    backgroundColor: '#f0f2f5',
   },
   propertyInfo: {
-    padding: theme.spacing.lg,
+    padding: 16,
   },
   propertyTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.xs,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#050505',
+    marginBottom: 8,
   },
   propertyDescription: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.md,
+    fontSize: 15,
+    color: '#65676b',
+    marginBottom: 12,
     lineHeight: 20,
   },
   propertyDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e4e6eb',
   },
   propertyPrice: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.primary,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1877f2',
   },
   propertyCategory: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.success,
-    fontWeight: theme.typography.fontWeight.semibold,
-    backgroundColor: '#d1fae5',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
+    fontSize: 13,
+    color: '#65676b',
+    fontWeight: '600',
+    backgroundColor: '#f0f2f5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
   propertyLocation: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
+    fontSize: 15,
+    color: '#65676b',
   },
   emptyState: {
     paddingVertical: theme.spacing['3xl'],

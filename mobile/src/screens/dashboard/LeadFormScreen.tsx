@@ -14,10 +14,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LeadsStackParamList } from '../navigation/LeadsStackNavigator';
+import { AuthenticatedStackParamList } from '../../types/navigation';
 
-type LeadFormRouteProp = RouteProp<LeadsStackParamList, 'LeadForm'>;
-type LeadFormNavigationProp = NativeStackNavigationProp<LeadsStackParamList>;
+type LeadFormRouteProp = RouteProp<AuthenticatedStackParamList, 'LeadForm'>;
+type LeadFormNavigationProp = NativeStackNavigationProp<AuthenticatedStackParamList>;
 
 const theme = {
   colors: {

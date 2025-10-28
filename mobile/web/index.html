@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    
+    <!-- Primary Meta Tags -->
+    <title>Contaboo - Find Your Dream Property</title>
+    <meta name="title" content="Contaboo - Find Your Dream Property" />
+    <meta name="description" content="Discover and explore properties with Contaboo - Your trusted real estate platform. Browse listings, featured properties, and connect with verified agents." />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Contaboo - Find Your Dream Property" />
+    <meta property="og:description" content="Discover and explore properties with Contaboo - Your trusted real estate platform" />
+    <meta property="og:image" content="./icon.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="Contaboo - Find Your Dream Property" />
+    <meta property="twitter:description" content="Discover and explore properties with Contaboo - Your trusted real estate platform" />
+    <meta property="twitter:image" content="./icon.png" />
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#1877f2" />
+    <meta name="msapplication-TileColor" content="#1877f2" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon.png" />
+    <link rel="apple-touch-icon" href="./icon.png" />
+    <link rel="shortcut icon" href="./favicon.png" />
+    
+    <!-- Prevent page caching -->
+    <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta httpEquiv="Pragma" content="no-cache" />
+    <meta httpEquiv="Expires" content="0" />
+    
+    <style>
+      /* Loading screen styles */
+      #root {
+        height: 100%;
+        width: 100%;
+      }
+      
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: #f0f2f5;
+      }
+      
+      /* Loading spinner */
+      .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background-color: #f0f2f5;
+      }
+      
+      .loading-logo {
+        width: 80px;
+        height: 80px;
+        background-color: #1877f2;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        font-weight: bold;
+        color: white;
+        margin-bottom: 20px;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      
+      .loading-text {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1877f2;
+        margin-bottom: 10px;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e4e6eb;
+        border-top: 4px solid #1877f2;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    
+    <!-- Loading screen shown while app loads -->
+    <div id="root">
+      <div class="loading-container">
+        <div class="loading-logo">C</div>
+        <div class="loading-text">Contaboo</div>
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+    
+    <!-- App will be rendered here -->
+  </body>
+</html>

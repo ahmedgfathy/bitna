@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import PublicNavigator from './src/navigation/PublicNavigator';
 import AuthenticatedNavigator from './src/navigation/AuthenticatedNavigator';
@@ -21,6 +21,22 @@ const linking = {
 
 export default function App() {
   const { isAuthenticated, isLoading, restoreSession } = useAuthStore();
+
+  // Set document title for web
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      document.title = 'Contaboo - Find Your Dream Property';
+      
+      // Set favicon dynamically
+      const favicon = document.querySelector("link[rel*='icon']") as HTMLLinkElement || document.createElement('link');
+      favicon.type = 'image/png';
+      favicon.rel = 'icon';
+      favicon.href = '/assets/favicon.png';
+      if (!document.querySelector("link[rel*='icon']")) {
+        document.head.appendChild(favicon);
+      }
+    }
+  }, []);
 
   // Restore session on app load
   useEffect(() => {

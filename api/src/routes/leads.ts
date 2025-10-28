@@ -67,4 +67,44 @@ router.post('/', tenantIsolation, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/leads/bulk
+ * Bulk import leads from CSV (tenant-scoped)
+ */
+router.post('/bulk', tenantIsolation, async (req, res) => {
+  try {
+    const { leads: leadsData } = req.body;
+    
+    if (!Array.isArray(leadsData) || leadsData.length === 0) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Invalid leads data. Expected an array of leads.',
+      });
+      return;
+    }
+
+    // Create all leads in bulk
+    const createdLeads = await Promise.all(
+      leadsData.map(leadData =>
+        db.createLead({
+          ...leadData,
+          tenantId: req.tenantId!,
+        })
+      )
+    );
+
+    res.status(201).json({
+      status: 'success',
+      data: createdLeads,
+      count: createdLeads.length,
+      message: `Successfully imported ${createdLeads.length} leads`,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Failed to bulk import leads',
+    });
+  }
+});
+
 export default router;

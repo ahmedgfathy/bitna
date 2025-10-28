@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { PropertiesStackParamList } from '../navigation/PropertiesStackNavigator';
+import { AuthenticatedStackParamList } from '../../types/navigation';
 
 const theme = {
   colors: {
@@ -43,8 +43,8 @@ const theme = {
   },
 };
 
-type PropertyDetailRouteProp = RouteProp<PropertiesStackParamList, 'PropertyDetail'>;
-type PropertyDetailNavigationProp = NativeStackNavigationProp<PropertiesStackParamList>;
+type PropertyDetailRouteProp = RouteProp<AuthenticatedStackParamList, 'PropertyDetail'>;
+type PropertyDetailNavigationProp = NativeStackNavigationProp<AuthenticatedStackParamList>;
 
 interface PropertyType {
   id: string;

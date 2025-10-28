@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { tenantIsolation, requireOwnerOrManager } from '../middleware/tenantIsolation';
+import { tenantIsolation } from '../middleware/tenantIsolation';
 import * as db from '../services/database.service';
 
 const router = Router();
@@ -49,15 +49,65 @@ router.post('/', tenantIsolation, async (req, res) => {
 });
 
 /**
+ * POST /api/properties/bulk
+ * Bulk import properties from CSV (tenant-scoped)
+ */
+router.post('/bulk', tenantIsolation, async (req, res) => {
+  try {
+    const { properties: propertiesData } = req.body;
+    
+    if (!Array.isArray(propertiesData) || propertiesData.length === 0) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Invalid properties data. Expected an array of properties.',
+      });
+      return;
+    }
+
+    // Create all properties in bulk
+    const createdProperties = await Promise.all(
+      propertiesData.map(propertyData =>
+        db.createProperty({
+          ...propertyData,
+          tenantId: req.tenantId!,
+          createdById: req.user!.id,
+        })
+      )
+    );
+
+    res.status(201).json({
+      status: 'success',
+      data: createdProperties,
+      count: createdProperties.length,
+      message: `Successfully imported ${createdProperties.length} properties`,
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Failed to bulk import properties',
+    });
+  }
+});
+
+/**
  * PATCH /api/properties/:id/visibility
  * Toggle property public visibility (❤️ toggle)
  */
 router.patch('/:id/visibility', tenantIsolation, async (req, res) => {
   try {
     const { isPublic } = req.body;
+    const propertyId = req.params.id;
+
+    if (!propertyId) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Property ID is required',
+      });
+      return;
+    }
 
     const property = await db.togglePropertyVisibility(
-      req.params.id,
+      propertyId,
       req.tenantId!,
       isPublic
     );
@@ -113,10 +163,11 @@ router.get('/nearby', async (req, res) => {
     const { latitude, longitude, radius } = req.query;
 
     if (!latitude || !longitude) {
-      return res.status(400).json({
+      res.status(400).json({
         status: 'error',
         message: 'Latitude and longitude are required',
       });
+      return;
     }
 
     const properties = await db.getNearestProperties(

@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import theme from '../../config/theme';
+import CSVImportModal from '../../components/CSVImportModal';
+import apiClient from '../../services/api';
 
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -41,6 +43,7 @@ export default function LeadsScreen({ navigation }: any) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filterSource, setFilterSource] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
+  const [showImportModal, setShowImportModal] = useState(false);
 
   useEffect(() => {
     loadLeads();
@@ -53,56 +56,20 @@ export default function LeadsScreen({ navigation }: any) {
   const loadLeads = async () => {
     try {
       setLoading(true);
-      // Mock data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const mockData: Lead[] = [
-        {
-          id: '1',
-          name: 'Ahmed Mohamed',
-          phone: '+20 100 123 4567',
-          email: 'ahmed@example.com',
-          source: 'Website',
-          status: 'New',
-          assignedTo: 'Sara Ali',
-          notes: 'Interested in villas in New Cairo',
-          createdAt: '2024-10-25T10:00:00Z',
-        },
-        {
-          id: '2',
-          name: 'Fatma Hassan',
-          phone: '+20 101 234 5678',
-          email: 'fatma@example.com',
-          source: 'Phone Call',
-          status: 'Contacted',
-          assignedTo: 'Ahmed Ibrahim',
-          notes: 'Looking for apartment in Zamalek',
-          createdAt: '2024-10-24T14:30:00Z',
-        },
-        {
-          id: '3',
-          name: 'Mohamed Khaled',
-          phone: '+20 102 345 6789',
-          source: 'Referral',
-          status: 'Qualified',
-          assignedTo: 'Sara Ali',
-          notes: 'Budget 5-7M EGP, North Coast area',
-          createdAt: '2024-10-23T09:15:00Z',
-        },
-        {
-          id: '4',
-          name: 'Nour Essam',
-          phone: '+20 103 456 7890',
-          email: 'nour@example.com',
-          source: 'Social Media',
-          status: 'New',
-          notes: 'Commercial property inquiry',
-          createdAt: '2024-10-22T16:45:00Z',
-        },
-      ];
-      setLeads(mockData);
-    } catch (error) {
+      
+      // Fetch from real API
+      const response = await apiClient.get('/leads');
+      
+      if (response.data.status === 'success') {
+        setLeads(response.data.data);
+      } else {
+        throw new Error(response.data.message || 'Failed to load leads');
+      }
+    } catch (error: any) {
       console.error('Failed to load leads:', error);
-      Alert.alert('Error', 'Failed to load leads');
+      Alert.alert('Error', error.response?.data?.message || 'Failed to load leads');
+      // Set empty array on error
+      setLeads([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -173,6 +140,73 @@ export default function LeadsScreen({ navigation }: any) {
         },
       ]
     );
+  };
+
+  const handleImportSuccess = async (importedLeads: any[]) => {
+    try {
+      // Show loading
+      Alert.alert('Saving...', 'Importing leads to database...');
+      
+      // Map to database format
+      const leadsToImport = importedLeads.map(lead => ({
+        name: lead.name || 'No Name',
+        mobile: lead.phone || '',
+        email: lead.email || null,
+        source: mapSource(lead.source),
+        status: mapStatus(lead.status),
+        notes: lead.notes || null,
+      }));
+
+      // Send to API
+      const response = await apiClient.post('/leads/bulk', {
+        leads: leadsToImport
+      });
+
+      if (response.data.status === 'success') {
+        // Reload leads from database
+        await loadLeads();
+        
+        Alert.alert(
+          'Import Successful! 🎉',
+          `${response.data.count} leads have been saved to database!`
+        );
+      } else {
+        throw new Error(response.data.message || 'Failed to import leads');
+      }
+    } catch (error: any) {
+      console.error('Failed to import leads:', error);
+      Alert.alert(
+        'Import Failed',
+        error.response?.data?.message || error.message || 'Failed to save leads to database'
+      );
+    }
+  };
+
+  // Map lead source to enum values
+  const mapSource = (source: string): string => {
+    const sourceMap: Record<string, string> = {
+      'Facebook': 'SOCIAL_MEDIA',
+      'Instagram': 'SOCIAL_MEDIA',
+      'Website': 'WEBSITE',
+      'Referral': 'REFERRAL',
+      'Phone Call': 'DIRECT_CALL',
+      'Walk-in': 'WALK_IN',
+      'Email': 'OTHER',
+    };
+    return sourceMap[source] || 'OTHER';
+  };
+
+  // Map lead status to enum values
+  const mapStatus = (status: string): string => {
+    const statusMap: Record<string, string> = {
+      'new': 'NEW',
+      'contacted': 'CONTACTED',
+      'qualified': 'QUALIFIED',
+      'negotiating': 'NEGOTIATING',
+      'converted': 'WON',
+      'lost': 'LOST',
+    };
+    return statusMap[status.toLowerCase()] || 'NEW';
   };
 
   const handleBulkChangeStatus = (newStatus: string) => {
@@ -301,6 +335,20 @@ export default function LeadsScreen({ navigation }: any) {
     <View style={styles.header}>
       <View style={styles.titleRow}>
         <Text style={styles.screenTitle}>Leads</Text>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate('LeadForm')}
+          >
+            <Text style={styles.addButtonText}>➕ Add Lead</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.importButton}
+            onPress={() => setShowImportModal(true)}
+          >
+            <Text style={styles.importButtonText}>📥 Import CSV</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <TextInput
@@ -416,6 +464,14 @@ export default function LeadsScreen({ navigation }: any) {
         />
         {renderBulkActions()}
         
+        {/* CSV Import Modal */}
+        <CSVImportModal
+          visible={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onImportSuccess={handleImportSuccess}
+          type="leads"
+        />
+
         {/* Floating Action Button */}
         <TouchableOpacity
           style={styles.fab}
@@ -470,6 +526,38 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize['3xl'],
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textPrimary,
+  },
+  importButton: {
+    backgroundColor: '#42b72a',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  importButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  addButton: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   searchInput: {
     backgroundColor: theme.colors.background,

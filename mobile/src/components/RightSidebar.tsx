@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -128,6 +128,7 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    marginBottom: 12,
   },
   badge: {
     backgroundColor: '#ef4444',

@@ -15,10 +15,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { PropertiesStackParamList } from '../navigation/PropertiesStackNavigator';
+import { AuthenticatedStackParamList } from '../../types/navigation';
 
-type PropertyFormRouteProp = RouteProp<PropertiesStackParamList, 'PropertyForm'>;
-type PropertyFormNavigationProp = NativeStackNavigationProp<PropertiesStackParamList>;
+type PropertyFormRouteProp = RouteProp<AuthenticatedStackParamList, 'PropertyForm'>;
+type PropertyFormNavigationProp = NativeStackNavigationProp<AuthenticatedStackParamList>;
 
 const theme = {
   colors: {

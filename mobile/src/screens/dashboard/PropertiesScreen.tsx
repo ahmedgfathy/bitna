@@ -16,6 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import theme from '../../config/theme';
 import { PropertyType } from '../../types/navigation';
 import { useAuthStore } from '../../stores/authStore';
+import CSVImportModal from '../../components/CSVImportModal';
+import apiClient from '../../services/api';
 
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -31,6 +33,7 @@ export default function PropertiesScreen({ navigation }: any) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
+  const [showImportModal, setShowImportModal] = useState(false);
 
   useEffect(() => {
     loadProperties();
@@ -43,70 +46,23 @@ export default function PropertiesScreen({ navigation }: any) {
   const loadProperties = async () => {
     try {
       setLoading(true);
-      // Mock data
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const mockData: PropertyType[] = [
-        {
-          id: '1',
-          title: 'Luxury Villa - New Cairo',
-          description: 'Modern 5-bedroom villa with pool',
-          price: 12000000,
-          location: 'Fifth Settlement, New Cairo',
-          latitude: 30.0444,
-          longitude: 31.2357,
-          imageUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
-          propertyType: 'Villa',
-          category: 'For Sale',
-          region: 'New Cairo',
-          isPublic: true,
-        },
-        {
-          id: '2',
-          title: 'Penthouse Apartment - Zamalek',
-          description: 'Exclusive penthouse with Nile view',
-          price: 15000000,
-          location: 'Zamalek, Cairo',
-          latitude: 30.0626,
-          longitude: 31.2217,
-          imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800',
-          propertyType: 'Apartment',
-          category: 'For Sale',
-          region: 'Cairo',
-          isPublic: true,
-        },
-        {
-          id: '3',
-          title: 'Commercial Office - Downtown',
-          description: 'Prime office space in business district',
-          price: 25000,
-          location: 'Downtown, Cairo',
-          latitude: 30.0626,
-          longitude: 31.2497,
-          imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800',
-          propertyType: 'Commercial',
-          category: 'For Rent',
-          region: 'Cairo',
-          isPublic: false,
-        },
-        {
-          id: '4',
-          title: 'Beachfront Villa - North Coast',
-          description: 'Luxury villa with private beach access',
-          price: 18000000,
-          location: 'Hacienda Bay, North Coast',
-          latitude: 30.8800,
-          longitude: 29.0833,
-          imageUrl: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800',
-          propertyType: 'Villa',
-          category: 'For Sale',
-          region: 'North Coast',
-          isPublic: true,
-        },
-      ];
-      setProperties(mockData);
-    } catch (error) {
+      
+      // Fetch from real API
+      const response = await apiClient.get('/properties');
+      
+      console.log('🏠 API Response:', response.data);
+      console.log('🏠 First property:', response.data.data?.[0]);
+      
+      if (response.data.status === 'success') {
+        setProperties(response.data.data);
+      } else {
+        throw new Error(response.data.message || 'Failed to load properties');
+      }
+    } catch (error: any) {
       console.error('Failed to load properties:', error);
-      Alert.alert('Error', 'Failed to load properties');
+      Alert.alert('Error', error.response?.data?.message || 'Failed to load properties');
+      // Set empty array on error
+      setProperties([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -202,6 +158,69 @@ export default function PropertiesScreen({ navigation }: any) {
     );
   };
 
+  const handleImportSuccess = async (importedProperties: any[]) => {
+    try {
+      console.log('🎯 Starting property import...', importedProperties.length, 'properties');
+      console.log('📋 First property sample:', importedProperties[0]);
+      
+      // Show loading
+      Alert.alert('Saving...', 'Importing properties to database...');
+      
+      // Map to database format
+      const propertiesToImport = importedProperties.map((property, index) => {
+        // Put property name/compound in description field for display
+        const propertyName = property.title || property.name || property.compound || property.description || '';
+        
+        const mapped = {
+          title: 'Property', // Generic title
+          description: propertyName, // Put actual property name here
+          price: property.price || 0,
+          latitude: property.latitude || 0,
+          longitude: property.longitude || 0,
+          address: property.location || property.address || null,
+          bedrooms: property.bedrooms || null,
+          bathrooms: property.bathrooms || null,
+          area: property.area || null,
+          isPublic: property.isPublic !== undefined ? property.isPublic : false,
+        };
+        
+        if (index === 0) {
+          console.log('📤 Mapped first property:', mapped);
+        }
+        
+        return mapped;
+      });
+
+      console.log('📤 Sending to API:', propertiesToImport.length, 'properties');
+
+      // Send to API
+      const response = await apiClient.post('/properties/bulk', {
+        properties: propertiesToImport
+      });
+
+      console.log('✅ API Response:', response.data);
+
+      if (response.data.status === 'success') {
+        // Reload properties from database
+        await loadProperties();
+        
+        Alert.alert(
+          'Import Successful! 🎉',
+          `${response.data.count} properties have been saved to database!`
+        );
+      } else {
+        throw new Error(response.data.message || 'Failed to import properties');
+      }
+    } catch (error: any) {
+      console.error('❌ Failed to import properties:', error);
+      console.error('❌ Error details:', error.response?.data);
+      Alert.alert(
+        'Import Failed',
+        error.response?.data?.message || error.message || 'Failed to save properties to database'
+      );
+    }
+  };
+
   const formatPrice = (price: number, category: string) => {
     if (category === 'For Rent') {
       return `${price.toLocaleString()} EGP/mo`;
@@ -238,8 +257,8 @@ export default function PropertiesScreen({ navigation }: any) {
             {isSelected && <Text style={styles.checkmark}>✓</Text>}
           </View>
           <View style={styles.headerInfo}>
-            <Text style={styles.propertyTitle} numberOfLines={1}>
-              {item.title}
+            <Text style={styles.propertyTitle} numberOfLines={2}>
+              {item.description || item.title || 'No Name'}
             </Text>
             <View style={styles.statusBadge}>
               <Text style={styles.statusText}>
@@ -249,26 +268,28 @@ export default function PropertiesScreen({ navigation }: any) {
           </View>
         </View>
 
-        <Text style={styles.propertyDescription} numberOfLines={2}>
-          {item.description}
-        </Text>
-
         <View style={styles.propertyDetails}>
           <Text style={styles.propertyPrice}>{formatPrice(item.price, item.category)}</Text>
           <View style={styles.badges}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{item.propertyType}</Text>
-            </View>
-            <View style={[styles.badge, styles.categoryBadge]}>
-              <Text style={styles.badgeText}>{item.category}</Text>
-            </View>
+            {item.propertyType && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{item.propertyType}</Text>
+              </View>
+            )}
+            {item.category && (
+              <View style={[styles.badge, styles.categoryBadge]}>
+                <Text style={styles.badgeText}>{item.category}</Text>
+              </View>
+            )}
           </View>
         </View>
 
-        <View style={styles.locationRow}>
-          <Text style={styles.propertyLocation}>📍 {item.location}</Text>
-          <Text style={styles.propertyRegion}>{item.region}</Text>
-        </View>
+        {item.location && (
+          <View style={styles.locationRow}>
+            <Text style={styles.propertyLocation}>📍 {item.location}</Text>
+            {item.region && <Text style={styles.propertyRegion}>{item.region}</Text>}
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -277,6 +298,20 @@ export default function PropertiesScreen({ navigation }: any) {
     <View style={styles.header}>
       <View style={styles.titleRow}>
         <Text style={styles.screenTitle}>Properties</Text>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate('PropertyForm')}
+          >
+            <Text style={styles.addButtonText}>➕ Add Property</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.importButton}
+            onPress={() => setShowImportModal(true)}
+          >
+            <Text style={styles.importButtonText}>📥 Import CSV</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <TextInput
@@ -400,6 +435,14 @@ export default function PropertiesScreen({ navigation }: any) {
         >
           <Text style={styles.fabIcon}>+</Text>
         </TouchableOpacity>
+
+        {/* CSV Import Modal */}
+        <CSVImportModal
+          visible={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onImportSuccess={handleImportSuccess}
+          type="properties"
+        />
       </View>
     </SafeAreaView>
   );
@@ -546,6 +589,12 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
     marginRight: theme.spacing.sm,
   },
+  propertySubtitle: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textTertiary,
+    marginBottom: theme.spacing.sm,
+    fontStyle: 'italic',
+  },
   propertyDescription: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.textSecondary,
@@ -672,5 +721,37 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '300',
     color: '#ffffff',
+  },
+  importButton: {
+    backgroundColor: '#42b72a',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  importButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  addButton: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

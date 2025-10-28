@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Platform, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { AuthenticatedStackParamList } from '../types/navigation';
 
 // Import components
 import TopNavBar from '../components/TopNavBar';
@@ -19,11 +20,14 @@ import LeadFormScreen from '../screens/dashboard/LeadFormScreen';
 import EmployeesScreen from '../screens/dashboard/EmployeesScreen';
 import SettingsScreen from '../screens/dashboard/SettingsScreen';
 
+// Import public screens for authenticated users
+import HomeScreen from '../screens/public/HomeScreen';
+
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 const isDesktop = isWeb && width >= 1024;
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<AuthenticatedStackParamList>();
 
 function MainLayout({ children }: any) {
   return (
@@ -137,6 +141,15 @@ export default function AuthenticatedNavigator() {
           </MainLayout>
         )}
       </Stack.Screen>
+      
+      {/* Public Home Screen - Accessible while logged in */}
+      <Stack.Screen 
+        name="Home"
+        component={HomeScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack.Navigator>
   );
 }

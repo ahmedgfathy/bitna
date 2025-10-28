@@ -37,8 +37,8 @@ export default function TopNavBar() {
   };
 
   const handleGoHome = () => {
-    // Logout to go back to public home page
-    logout();
+    // Navigate to public home page while staying logged in
+    navigation.navigate('Home' as never);
   };
 
   return (

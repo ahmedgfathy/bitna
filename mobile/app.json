@@ -26,7 +26,19 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "Contaboo - Find Your Dream Property",
+      "shortName": "Contaboo",
+      "description": "Discover and explore properties with Contaboo - Your trusted real estate platform",
+      "themeColor": "#1877f2",
+      "backgroundColor": "#ffffff",
+      "bundler": "metro",
+      "output": "static",
+      "build": {
+        "babel": {
+          "include": []
+        }
+      }
     },
     "extra": {
       "apiBaseUrl": "http://localhost:3000"

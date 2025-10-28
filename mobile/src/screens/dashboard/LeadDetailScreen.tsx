@@ -13,10 +13,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LeadsStackParamList } from '../navigation/LeadsStackNavigator';
+import { AuthenticatedStackParamList } from '../../types/navigation';
 
-type LeadDetailRouteProp = RouteProp<LeadsStackParamList, 'LeadDetail'>;
-type LeadDetailNavigationProp = NativeStackNavigationProp<LeadsStackParamList>;
+type LeadDetailRouteProp = RouteProp<AuthenticatedStackParamList, 'LeadDetail'>;
+type LeadDetailNavigationProp = NativeStackNavigationProp<AuthenticatedStackParamList>;
 
 const theme = {
   colors: {

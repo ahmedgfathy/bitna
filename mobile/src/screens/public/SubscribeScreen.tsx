@@ -85,7 +85,7 @@ export default function SubscribeScreen({ navigation }: SubscribeScreenProps) {
         <View style={styles.logoCircleSmall}>
           <Text style={styles.logoLetterSmall}>C</Text>
         </View>
-        <Text style={styles.topLogoText}>Contaboo</Text>
+        {isDesktop && <Text style={styles.topLogoText}>Contaboo</Text>}
       </TouchableOpacity>
 
       <ScrollView 
