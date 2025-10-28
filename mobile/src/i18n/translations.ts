@@ -89,6 +89,7 @@ export const translations = {
     // Settings
     accountSettings: 'Account Settings',
     personalInfo: 'Personal Information',
+    preferences: 'Preferences',
     changePassword: 'Change Password',
     notifications: 'Notifications',
     notificationSettings: 'Notification Settings',
@@ -207,6 +208,7 @@ export const translations = {
     // Settings
     accountSettings: 'إعدادات الحساب',
     personalInfo: 'المعلومات الشخصية',
+    preferences: 'التفضيلات',
     changePassword: 'تغيير كلمة المرور',
     notifications: 'الإشعارات',
     notificationSettings: 'إعدادات الإشعارات',

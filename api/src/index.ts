@@ -15,6 +15,7 @@ import employeesRouter from './routes/employees';
 
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { authenticate } from './middleware/auth';
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
@@ -53,14 +54,14 @@ app.get('/db-test', async (_req: Request, res: Response) => {
 });
 
 // API Routes
-app.use('/api/properties', propertiesRouter);
-app.use('/api/leads', leadsRouter);
-app.use('/api/users', usersRouter);
-app.use('/api/static', staticDataRouter);
-app.use('/api/stats', statsRouter);
-app.use('/api/activities', activitiesRouter);
-app.use('/api/company', companyRouter);
-app.use('/api/employees', employeesRouter);
+app.use('/api/properties', authenticate, propertiesRouter);
+app.use('/api/leads', authenticate, leadsRouter);
+app.use('/api/users', authenticate, usersRouter);
+app.use('/api/static', staticDataRouter); // Public endpoint
+app.use('/api/stats', authenticate, statsRouter);
+app.use('/api/activities', authenticate, activitiesRouter);
+app.use('/api/company', authenticate, companyRouter);
+app.use('/api/employees', authenticate, employeesRouter);
 
 // Note: Authentication routes will be added in the next phase
 // app.use('/api/auth', authRoutes);
