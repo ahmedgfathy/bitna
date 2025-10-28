@@ -52,9 +52,29 @@ export default function PropertiesScreen({ navigation }: any) {
       
       console.log('🏠 API Response:', response.data);
       console.log('🏠 First property:', response.data.data?.[0]);
+      console.log('🏠 First property description:', response.data.data?.[0]?.description);
+      console.log('🏠 First property price:', response.data.data?.[0]?.price);
+      console.log('🏠 Total properties fetched:', response.data.count);
       
       if (response.data.status === 'success') {
-        setProperties(response.data.data);
+        // Map database fields to frontend types
+        const mappedProperties = response.data.data.map((prop: any) => ({
+          ...prop,
+          // Convert Prisma Decimal to number
+          price: typeof prop.price === 'string' ? parseFloat(prop.price) : prop.price,
+          latitude: typeof prop.latitude === 'string' ? parseFloat(prop.latitude) : prop.latitude,
+          longitude: typeof prop.longitude === 'string' ? parseFloat(prop.longitude) : prop.longitude,
+          area: prop.area ? (typeof prop.area === 'string' ? parseFloat(prop.area) : prop.area) : null,
+          // Map address to location for frontend compatibility
+          location: prop.address || prop.region?.name || 'No location',
+          // Map relation objects to strings for display
+          propertyType: prop.propertyType?.name || 'N/A',
+          category: prop.category?.name || 'N/A',
+          region: prop.region?.name || 'N/A',
+        }));
+        
+        console.log('🏠 First mapped property:', mappedProperties[0]);
+        setProperties(mappedProperties);
       } else {
         throw new Error(response.data.message || 'Failed to load properties');
       }
