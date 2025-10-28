@@ -19,17 +19,5 @@ export type AuthenticatedStackParamList = {
   Home: undefined; // Public home accessible while logged in
 };
 
-export type PropertyType = {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  location: string;
-  latitude: number;
-  longitude: number;
-  imageUrl?: string;
-  propertyType: string;
-  category: string;
-  region: string;
-  isPublic: boolean;
-};
+// Import Property types from property.ts
+export type { Property, PropertyCategory, PropertyType, PropertyStatus } from './property';

@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthenticatedStackParamList } from '../../types/navigation';
+import { Property } from '../../types/property';
+import apiClient from '../../services/api';
 
 const theme = {
   colors: {
@@ -46,27 +48,12 @@ const theme = {
 type PropertyDetailRouteProp = RouteProp<AuthenticatedStackParamList, 'PropertyDetail'>;
 type PropertyDetailNavigationProp = NativeStackNavigationProp<AuthenticatedStackParamList>;
 
-interface PropertyType {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  location: string;
-  latitude?: number;
-  longitude?: number;
-  imageUrl: string;
-  propertyType: string;
-  category: string;
-  region: string;
-  isPublic: boolean;
-}
-
 export default function PropertyDetailScreen() {
   const navigation = useNavigation<PropertyDetailNavigationProp>();
   const route = useRoute<PropertyDetailRouteProp>();
   const { propertyId } = route.params;
 
-  const [property, setProperty] = useState<PropertyType | null>(null);
+  const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -76,28 +63,15 @@ export default function PropertyDetailScreen() {
   const loadProperty = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/properties/${propertyId}`);
-      // const data = await response.json();
+      const response = await apiClient.get(`/properties/${propertyId}`);
       
-      // Mock data for now
-      const mockProperty: PropertyType = {
-        id: propertyId,
-        title: 'Luxury Villa - New Cairo',
-        description: 'Modern 5-bedroom villa with private pool and garden in a gated community. Features include marble flooring, central AC, smart home system, and stunning views.',
-        price: 12000000,
-        location: 'Fifth Settlement, New Cairo',
-        latitude: 30.0444,
-        longitude: 31.2357,
-        imageUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
-        propertyType: 'Villa',
-        category: 'For Sale',
-        region: 'New Cairo',
-        isPublic: true,
-      };
-      
-      setProperty(mockProperty);
+      if (response.data.status === 'success') {
+        setProperty(response.data.data);
+      } else {
+        throw new Error('Failed to load property');
+      }
     } catch (error) {
+      console.error('Error loading property:', error);
       Alert.alert('Error', 'Failed to load property details');
       navigation.goBack();
     } finally {
@@ -133,11 +107,19 @@ export default function PropertyDetailScreen() {
     );
   };
 
-  const formatPrice = (price: number, category: string) => {
-    if (price >= 1000000) {
-      return `${(price / 1000000).toFixed(1)}M EGP`;
+  const formatPrice = (salePrice?: number | null, rentalPrice?: number | null, statusName?: string) => {
+    const price = salePrice || rentalPrice || 0;
+    if (!price) return 'Price not set';
+    
+    if (statusName?.toLowerCase().includes('rent') || rentalPrice) {
+      return price >= 1000000 
+        ? `${(price / 1000000).toFixed(1)}M EGP/mo`
+        : `${price.toLocaleString()} EGP/mo`;
     }
-    return `${price.toLocaleString()} EGP${category === 'For Rent' ? '/mo' : ''}`;
+    
+    return price >= 1000000 
+      ? `${(price / 1000000).toFixed(1)}M EGP`
+      : `${price.toLocaleString()} EGP`;
   };
 
   if (loading) {
@@ -166,79 +148,173 @@ export default function PropertyDetailScreen() {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Image */}
-        <Image source={{ uri: property.imageUrl }} style={styles.image} />
+        {property.images && property.images[0] ? (
+          <Image source={{ uri: property.images[0].image_url }} style={styles.image} />
+        ) : (
+          <View style={[styles.image, { backgroundColor: theme.colors.secondary, justifyContent: 'center', alignItems: 'center' }]}>
+            <Ionicons name="home-outline" size={64} color={theme.colors.textSecondary} />
+          </View>
+        )}
 
         {/* Content */}
         <View style={styles.content}>
           {/* Title & Status */}
           <View style={styles.titleRow}>
             <View style={styles.titleContainer}>
-              <Text style={styles.title}>{property.title}</Text>
+              <Text style={styles.title}>{property.property_name || property.title || 'Property'}</Text>
               <View style={styles.statusBadge}>
                 <Ionicons
-                  name={property.isPublic ? 'globe-outline' : 'lock-closed-outline'}
+                  name={property.is_active ? 'globe-outline' : 'lock-closed-outline'}
                   size={14}
-                  color={property.isPublic ? theme.colors.success : theme.colors.textSecondary}
+                  color={property.is_active ? theme.colors.success : theme.colors.textSecondary}
                 />
                 <Text
                   style={[
                     styles.statusText,
-                    { color: property.isPublic ? theme.colors.success : theme.colors.textSecondary },
+                    { color: property.is_active ? theme.colors.success : theme.colors.textSecondary },
                   ]}
                 >
-                  {property.isPublic ? 'Public' : 'Private'}
+                  {property.is_active ? 'Active' : 'Inactive'}
                 </Text>
               </View>
             </View>
           </View>
 
           {/* Price */}
-          <Text style={styles.price}>{formatPrice(property.price, property.category)}</Text>
+          <Text style={styles.price}>
+            {formatPrice(property.sale_price, property.rental_price_monthly, property.status?.name)}
+          </Text>
 
           {/* Location */}
           <View style={styles.infoRow}>
             <Ionicons name="location-outline" size={20} color={theme.colors.textSecondary} />
-            <Text style={styles.location}>{property.location}</Text>
+            <Text style={styles.location}>
+              {property.address || property.region?.display_name || property.region?.name || 'No location'}
+            </Text>
           </View>
 
           {/* Type & Category Badges */}
           <View style={styles.badgeRow}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{property.propertyType}</Text>
-            </View>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{property.category}</Text>
-            </View>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{property.region}</Text>
-            </View>
+            {property.type?.name && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{property.type.name}</Text>
+              </View>
+            )}
+            {property.status?.name && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{property.status.name}</Text>
+              </View>
+            )}
+            {property.region?.display_name && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{property.region.display_name}</Text>
+              </View>
+            )}
           </View>
 
           {/* Description */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Description</Text>
-            <Text style={styles.description}>{property.description}</Text>
-          </View>
+          {property.description && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Description</Text>
+              <Text style={styles.description}>{property.description}</Text>
+            </View>
+          )}
 
           {/* Property Details */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Property Details</Text>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Type:</Text>
-              <Text style={styles.detailValue}>{property.propertyType}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Category:</Text>
-              <Text style={styles.detailValue}>{property.category}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Region:</Text>
-              <Text style={styles.detailValue}>{property.region}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Location:</Text>
-              <Text style={styles.detailValue}>{property.location}</Text>
-            </View>
+            
+            {property.property_number && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Property Number:</Text>
+                <Text style={styles.detailValue}>{property.property_number}</Text>
+              </View>
+            )}
+            
+            {property.type?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Type:</Text>
+                <Text style={styles.detailValue}>{property.type.name}</Text>
+              </View>
+            )}
+            
+            {property.status?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Status:</Text>
+                <Text style={styles.detailValue}>{property.status.name}</Text>
+              </View>
+            )}
+            
+            {property.category?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Category:</Text>
+                <Text style={styles.detailValue}>{property.category.name}</Text>
+              </View>
+            )}
+            
+            {property.finishing_status?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Finishing:</Text>
+                <Text style={styles.detailValue}>{property.finishing_status.name}</Text>
+              </View>
+            )}
+            
+            {property.bedrooms_count != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Bedrooms:</Text>
+                <Text style={styles.detailValue}>{property.bedrooms_count}</Text>
+              </View>
+            )}
+            
+            {property.bathrooms_count != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Bathrooms:</Text>
+                <Text style={styles.detailValue}>{property.bathrooms_count}</Text>
+              </View>
+            )}
+            
+            {property.total_area != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Total Area:</Text>
+                <Text style={styles.detailValue}>{property.total_area} m²</Text>
+              </View>
+            )}
+            
+            {property.land_area != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Land Area:</Text>
+                <Text style={styles.detailValue}>{property.land_area} m²</Text>
+              </View>
+            )}
+            
+            {property.region?.display_name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Region:</Text>
+                <Text style={styles.detailValue}>{property.region.display_name}</Text>
+              </View>
+            )}
+            
+            {property.district?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>District:</Text>
+                <Text style={styles.detailValue}>{property.district.name}</Text>
+              </View>
+            )}
+            
+            {property.compound?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Compound:</Text>
+                <Text style={styles.detailValue}>{property.compound.name}</Text>
+              </View>
+            )}
+            
+            {property.floor_number && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Floor:</Text>
+                <Text style={styles.detailValue}>{property.floor_number}</Text>
+              </View>
+            )}
+            
             {property.latitude && property.longitude && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Coordinates:</Text>

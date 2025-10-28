@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import theme from '../../config/theme';
-import { PropertyType } from '../../types/navigation';
+import { Property } from '../../types/property';
 import { useAuthStore } from '../../stores/authStore';
 import CSVImportModal from '../../components/CSVImportModal';
 import apiClient from '../../services/api';
@@ -25,8 +25,8 @@ const isDesktop = isWeb && width > 768;
 const numColumns = isDesktop ? (width > 1200 ? 3 : 2) : 1;
 
 export default function PropertiesScreen({ navigation }: any) {
-  const [properties, setProperties] = useState<PropertyType[]>([]);
-  const [filteredProperties, setFilteredProperties] = useState<PropertyType[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,21 +57,29 @@ export default function PropertiesScreen({ navigation }: any) {
       console.log('🏠 Total properties fetched:', response.data.count);
       
       if (response.data.status === 'success') {
-        // Map database fields to frontend types
-        const mappedProperties = response.data.data.map((prop: any) => ({
-          ...prop,
+        // Map database fields to frontend display
+        const mappedProperties = response.data.data.map((prop: any) => {
           // Convert Prisma Decimal to number
-          price: typeof prop.price === 'string' ? parseFloat(prop.price) : prop.price,
-          latitude: typeof prop.latitude === 'string' ? parseFloat(prop.latitude) : prop.latitude,
-          longitude: typeof prop.longitude === 'string' ? parseFloat(prop.longitude) : prop.longitude,
-          area: prop.area ? (typeof prop.area === 'string' ? parseFloat(prop.area) : prop.area) : null,
-          // Map address to location for frontend compatibility
-          location: prop.address || prop.region?.name || 'No location',
-          // Map relation objects to strings for display
-          propertyType: prop.propertyType?.name || 'N/A',
-          category: prop.category?.name || 'N/A',
-          region: prop.region?.name || 'N/A',
-        }));
+          const salePrice = prop.sale_price ? (typeof prop.sale_price === 'string' ? parseFloat(prop.sale_price) : prop.sale_price) : null;
+          const rentalPrice = prop.rental_price_monthly ? (typeof prop.rental_price_monthly === 'string' ? parseFloat(prop.rental_price_monthly) : prop.rental_price_monthly) : null;
+          
+          return {
+            ...prop,
+            // Pricing
+            sale_price: salePrice,
+            rental_price_monthly: rentalPrice,
+            price: salePrice || rentalPrice || 0, // Fallback for display
+            
+            // Coordinates
+            latitude: typeof prop.latitude === 'string' ? parseFloat(prop.latitude) : prop.latitude,
+            longitude: typeof prop.longitude === 'string' ? parseFloat(prop.longitude) : prop.longitude,
+            
+            // Areas
+            land_area: prop.land_area ? (typeof prop.land_area === 'string' ? parseFloat(prop.land_area) : prop.land_area) : null,
+            total_area: prop.total_area ? (typeof prop.total_area === 'string' ? parseFloat(prop.total_area) : prop.total_area) : null,
+            built_area: prop.built_area ? (typeof prop.built_area === 'string' ? parseFloat(prop.built_area) : prop.built_area) : null,
+          };
+        });
         
         console.log('🏠 First mapped property:', mappedProperties[0]);
         setProperties(mappedProperties);
@@ -95,20 +103,20 @@ export default function PropertiesScreen({ navigation }: any) {
     if (searchQuery) {
       filtered = filtered.filter(
         (p) =>
-          p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.location.toLowerCase().includes(searchQuery.toLowerCase())
+          (p.title || p.property_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.address || p.region?.name || p.region?.display_name || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     if (filterCategory) {
-      filtered = filtered.filter((p) => p.category === filterCategory);
+      filtered = filtered.filter((p) => p.status?.name === filterCategory || p.category?.name === filterCategory);
     }
 
     if (filterStatus === 'public') {
-      filtered = filtered.filter((p) => p.isPublic);
+      filtered = filtered.filter((p) => p.is_active && p.is_available);
     } else if (filterStatus === 'private') {
-      filtered = filtered.filter((p) => !p.isPublic);
+      filtered = filtered.filter((p) => !p.is_active || !p.is_available);
     }
 
     setFilteredProperties(filtered);
@@ -167,7 +175,7 @@ export default function PropertiesScreen({ navigation }: any) {
           text: 'Confirm',
           onPress: () => {
             const updatedProperties = properties.map(p =>
-              selectedIds.has(p.id) ? { ...p, isPublic: makePublic } : p
+              selectedIds.has(p.id) ? { ...p, is_active: makePublic, is_available: makePublic } : p
             );
             setProperties(updatedProperties);
             clearSelection();
@@ -188,20 +196,22 @@ export default function PropertiesScreen({ navigation }: any) {
       
       // Map to database format
       const propertiesToImport = importedProperties.map((property, index) => {
-        // Put property name/compound in description field for display
         const propertyName = property.title || property.name || property.compound || property.description || '';
         
         const mapped = {
-          title: 'Property', // Generic title
-          description: propertyName, // Put actual property name here
-          price: property.price || 0,
-          latitude: property.latitude || 0,
-          longitude: property.longitude || 0,
+          property_name: propertyName,
+          title: property.title || 'Property',
+          description: property.description || propertyName,
+          sale_price: property.price || null,
+          rental_price_monthly: property.rental_price || null,
+          latitude: property.latitude || null,
+          longitude: property.longitude || null,
           address: property.location || property.address || null,
-          bedrooms: property.bedrooms || null,
-          bathrooms: property.bathrooms || null,
-          area: property.area || null,
-          isPublic: property.isPublic !== undefined ? property.isPublic : false,
+          bedrooms_count: property.bedrooms || null,
+          bathrooms_count: property.bathrooms || null,
+          total_area: property.area || null,
+          is_active: property.isPublic !== undefined ? property.isPublic : true,
+          is_available: true,
         };
         
         if (index === 0) {
@@ -241,8 +251,10 @@ export default function PropertiesScreen({ navigation }: any) {
     }
   };
 
-  const formatPrice = (price: number, category: string) => {
-    if (category === 'For Rent') {
+  const formatPrice = (price: number, status?: string) => {
+    if (!price) return 'Price not set';
+    
+    if (status?.toLowerCase().includes('rent')) {
       return `${price.toLocaleString()} EGP/mo`;
     }
     if (price >= 1000000) {
@@ -251,7 +263,7 @@ export default function PropertiesScreen({ navigation }: any) {
     return `${price.toLocaleString()} EGP`;
   };
 
-  const renderPropertyCard = ({ item }: { item: PropertyType }) => {
+  const renderPropertyCard = ({ item }: { item: Property }) => {
     const isSelected = selectedIds.has(item.id);
     const hasSelections = selectedIds.size > 0;
 
@@ -278,36 +290,42 @@ export default function PropertiesScreen({ navigation }: any) {
           </View>
           <View style={styles.headerInfo}>
             <Text style={styles.propertyTitle} numberOfLines={2}>
-              {item.description || item.title || 'No Name'}
+              {item.property_name || item.title || item.description || 'No Name'}
             </Text>
             <View style={styles.statusBadge}>
               <Text style={styles.statusText}>
-                {item.isPublic ? '🌐' : '🔒'}
+                {item.is_active && item.is_available ? '🌐' : '🔒'}
               </Text>
             </View>
           </View>
         </View>
 
         <View style={styles.propertyDetails}>
-          <Text style={styles.propertyPrice}>{formatPrice(item.price, item.category)}</Text>
+          <Text style={styles.propertyPrice}>
+            {formatPrice(item.sale_price || item.rental_price_monthly || 0, item.status?.name)}
+          </Text>
           <View style={styles.badges}>
-            {item.propertyType && (
+            {item.type?.name && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{item.propertyType}</Text>
+                <Text style={styles.badgeText}>{item.type.name}</Text>
               </View>
             )}
-            {item.category && (
+            {item.status?.name && (
               <View style={[styles.badge, styles.categoryBadge]}>
-                <Text style={styles.badgeText}>{item.category}</Text>
+                <Text style={styles.badgeText}>{item.status.name}</Text>
               </View>
             )}
           </View>
         </View>
 
-        {item.location && (
+        {(item.address || item.region) && (
           <View style={styles.locationRow}>
-            <Text style={styles.propertyLocation}>📍 {item.location}</Text>
-            {item.region && <Text style={styles.propertyRegion}>{item.region}</Text>}
+            <Text style={styles.propertyLocation}>
+              📍 {item.address || item.region?.display_name || item.region?.name || 'No location'}
+            </Text>
+            {item.district?.name && (
+              <Text style={styles.propertyRegion}>{item.district.name}</Text>
+            )}
           </View>
         )}
       </TouchableOpacity>
