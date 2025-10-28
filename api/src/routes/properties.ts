@@ -32,8 +32,8 @@ router.post('/', tenantIsolation, async (req, res) => {
   try {
     const property = await db.createProperty({
       ...req.body,
-      tenantId: req.tenantId!,
-      createdById: req.user!.id,
+      company_id: req.tenantId!,
+      created_by_id: req.user!.id,
     });
 
     res.status(201).json({
@@ -69,8 +69,8 @@ router.post('/bulk', tenantIsolation, async (req, res) => {
       propertiesData.map(propertyData =>
         db.createProperty({
           ...propertyData,
-          tenantId: req.tenantId!,
-          createdById: req.user!.id,
+          company_id: req.tenantId!,
+          created_by_id: req.user!.id,
         })
       )
     );

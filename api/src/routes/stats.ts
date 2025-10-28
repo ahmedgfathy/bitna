@@ -48,9 +48,8 @@ router.get('/dashboard', async (req, res) => {
     ]);
 
     // Calculate additional metrics
-    // Note: Properties don't have a direct 'status' field, they use listingStatus relation
-    // For now, we'll just count totals and public properties
-    const publicProperties = properties.filter(p => p.isPublic).length;
+    // Count published properties (new schema uses is_published instead of isPublic)
+    const publishedProperties = properties.filter(p => p.is_published && p.show_on_website).length;
     const qualifiedLeads = leads.filter(l => l.status === 'QUALIFIED').length;
 
     res.json({
@@ -58,8 +57,8 @@ router.get('/dashboard', async (req, res) => {
       data: {
         properties: {
           total: properties.length,
-          public: publicProperties,
-          private: properties.length - publicProperties,
+          public: publishedProperties,
+          private: properties.length - publishedProperties,
         },
         leads: {
           total: leads.length,

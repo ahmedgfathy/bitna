@@ -52,12 +52,12 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
     }
 
     // Mock user data - should match the MOCK_USER from authService.ts
-    // Super Admin - Platform Owner with full access
+    // Demo tenant with 12,398 imported properties
     const mockUser = {
-      id: 'super-admin-1',
-      mobile: '01002778090',
-      role: 'OWNER', // Super Admin role
-      tenantId: 'super-admin-tenant',
+      id: 'demo-user-1',
+      mobile: '01012345678',
+      role: 'OWNER',
+      tenantId: 'demo-tenant-1', // This tenant has all imported properties
     };
 
     // Attach user to request
@@ -87,12 +87,12 @@ export const optionalAuth = (_req: Request, _res: Response, next: NextFunction):
       const token = authHeader.substring(7);
       
       if (token.startsWith('mock_token_')) {
-        // Attach mock super admin user data
+        // Attach mock demo tenant user data
         _req.user = {
-          id: 'super-admin-1',
-          mobile: '01002778090',
+          id: 'demo-user-1',
+          mobile: '01012345678',
           role: 'OWNER',
-          tenantId: 'super-admin-tenant',
+          tenantId: 'demo-tenant-1',
         };
       }
     }
