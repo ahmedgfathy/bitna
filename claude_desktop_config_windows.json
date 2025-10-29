@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "bitna-crm": {
+      "command": "wsl.exe",
+      "args": [
+        "-e",
+        "/home/xinreal/bitna/mcp-server/start-mcp.sh"
+      ],
+      "env": {
+        "DATABASE_URL": "mysql://root:zerocall@localhost:3306/contaboo",
+        "NODE_ENV": "development"
+      }
+    }
+  }
+}

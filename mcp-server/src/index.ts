@@ -6,8 +6,8 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
-import prisma from './config/database';
-import { checkDatabaseConnection } from './config/database';
+import prisma from './config/database.js';
+import { checkDatabaseConnection } from './config/database.js';
 
 // Create MCP server instance
 const server = new Server(
