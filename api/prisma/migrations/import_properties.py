@@ -16,13 +16,13 @@ db_config = {
     'host': 'localhost',
     'user': 'root',
     'password': 'zerocall',
-    'database': 'bitna',
+    'database': 'contaboo',
     'charset': 'utf8mb4'
 }
 
 # Configuration
 TENANT_ID = 'demo-tenant-1'
-USER_ID = '2d0e59cf-3c22-4280-8bae-34b0072c6d2d'  # Ahmed Gomaa
+USER_ID = 'super-admin-1'  # Super Admin from seed
 SKIP_FILE_3 = True  # Skip property_data_3.csv due to duplicates
 
 def get_db_connection():
