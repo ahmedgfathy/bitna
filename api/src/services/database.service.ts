@@ -860,6 +860,86 @@ export const getCompounds = async (tenantId: string, districtId?: string) => {
 };
 
 /**
+ * PROPERTY STATISTICS
+ * 
+ * Advanced analytics and statistics for properties
+ */
+
+// Get property count by type
+export const getPropertyCountByType = async (tenantId: string) => {
+  const result = await prisma.$queryRaw<Array<{type_id: string, type: string, count: bigint}>>`
+    SELECT 
+      p.type_id, 
+      pt.name as type, 
+      COUNT(*) as count 
+    FROM properties p 
+    LEFT JOIN property_types pt ON p.type_id = pt.id 
+    WHERE p.company_id = ${tenantId}
+    GROUP BY p.type_id, pt.name 
+    ORDER BY count DESC
+  `;
+  return result.map(r => ({ type_id: r.type_id, type: r.type, count: Number(r.count) }));
+};
+
+// Get property count by status
+export const getPropertyCountByStatus = async (tenantId: string) => {
+  const result = await prisma.$queryRaw<Array<{status_id: string, status: string, count: bigint}>>`
+    SELECT 
+      p.status_id, 
+      ps.name as status, 
+      COUNT(*) as count 
+    FROM properties p 
+    LEFT JOIN property_statuses ps ON p.status_id = ps.id 
+    WHERE p.company_id = ${tenantId}
+    GROUP BY p.status_id, ps.name 
+    ORDER BY count DESC
+  `;
+  return result.map(r => ({ status_id: r.status_id, status: r.status, count: Number(r.count) }));
+};
+
+// Get property count by region
+export const getPropertyCountByRegion = async (tenantId: string) => {
+  const result = await prisma.$queryRaw<Array<{region_id: string, region: string, count: bigint}>>`
+    SELECT 
+      p.region_id, 
+      r.name as region, 
+      COUNT(*) as count 
+    FROM properties p 
+    LEFT JOIN regions r ON p.region_id = r.id 
+    WHERE p.company_id = ${tenantId} AND p.region_id IS NOT NULL
+    GROUP BY p.region_id, r.name 
+    ORDER BY count DESC
+    LIMIT 10
+  `;
+  return result.map(r => ({ region_id: r.region_id, region: r.region, count: Number(r.count) }));
+};
+
+// Get property value statistics
+export const getPropertyValueStats = async (tenantId: string) => {
+  const result = await prisma.$queryRaw<Array<{
+    total_value: string | null,
+    avg_value: string | null,
+    min_value: string | null,
+    max_value: string | null
+  }>>`
+    SELECT 
+      SUM(COALESCE(sale_price, rental_price_monthly, 0)) as total_value,
+      AVG(COALESCE(sale_price, rental_price_monthly, 0)) as avg_value,
+      MIN(COALESCE(sale_price, rental_price_monthly, 0)) as min_value,
+      MAX(COALESCE(sale_price, rental_price_monthly, 0)) as max_value
+    FROM properties 
+    WHERE company_id = ${tenantId} AND (sale_price IS NOT NULL OR rental_price_monthly IS NOT NULL)
+  `;
+  
+  return {
+    total_value: result[0]?.total_value ? parseFloat(result[0].total_value) : 0,
+    avg_value: result[0]?.avg_value ? parseFloat(result[0].avg_value) : 0,
+    min_value: result[0]?.min_value ? parseFloat(result[0].min_value) : 0,
+    max_value: result[0]?.max_value ? parseFloat(result[0].max_value) : 0,
+  };
+};
+
+/**
  * ACTIVITY OPERATIONS
  * 
  * These functions handle activities (tasks, notes, meetings) linked to leads or properties

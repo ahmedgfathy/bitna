@@ -44,11 +44,22 @@ router.get('/dashboard', async (req, res): Promise<void> => {
     const tenantId = req.user.tenantId;
 
     // Fetch all data in parallel for better performance
-    const [propertiesCount, leads, users, recentProperties] = await Promise.all([
+    const [
+      propertiesCount,
+      leads,
+      users,
+      propertyByType,
+      propertyByStatus,
+      propertyByRegion,
+      valueStats
+    ] = await Promise.all([
       db.countPropertiesByTenant(tenantId),
       db.getLeadsByTenant(tenantId),
       db.getUsersByTenant(tenantId),
-      db.getRecentProperties(tenantId, 5), // Get 5 most recent properties
+      db.getPropertyCountByType(tenantId),
+      db.getPropertyCountByStatus(tenantId),
+      db.getPropertyCountByRegion(tenantId),
+      db.getPropertyValueStats(tenantId),
     ]);
 
     // Get counts for published properties
@@ -64,17 +75,10 @@ router.get('/dashboard', async (req, res): Promise<void> => {
           total: propertiesCount,
           public: publishedCount,
           private: propertiesCount - publishedCount,
-          recent: recentProperties.map(p => ({
-            id: p.id,
-            name: p.property_name || p.title || 'Unnamed Property',
-            price: p.sale_price || p.rental_price_monthly || 0,
-            currency: p.currencies?.code || 'EGP',
-            area: p.total_area || p.land_area || 0,
-            region: p.regions?.display_name || p.regions?.name || 'No Region',
-            type: p.property_types?.name || p.property_types?.display_name || '',
-            status: p.property_statuses?.name || p.property_statuses?.display_name || '',
-            createdAt: p.created_at,
-          })),
+          byType: propertyByType,
+          byStatus: propertyByStatus,
+          byRegion: propertyByRegion,
+          valueStats: valueStats,
         },
         leads: {
           total: leads.length,
