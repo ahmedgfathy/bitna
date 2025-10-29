@@ -26,7 +26,6 @@ const numColumns = isDesktop ? (width > 1200 ? 3 : 2) : 1;
 
 export default function PropertiesScreen({ navigation }: any) {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -46,10 +45,6 @@ export default function PropertiesScreen({ navigation }: any) {
   useEffect(() => {
     loadProperties();
   }, []);
-
-  useEffect(() => {
-    filterPropertiesList();
-  }, [searchQuery, filterCategory, filterStatus, properties]);
 
   const loadProperties = async (page: number = 1, append: boolean = false) => {
     try {
@@ -126,31 +121,6 @@ export default function PropertiesScreen({ navigation }: any) {
     }
   };
 
-  const filterPropertiesList = () => {
-    let filtered = properties;
-
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (p) =>
-          (p.title || p.property_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (p.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (p.address || p.region?.name || p.region?.display_name || '').toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (filterCategory) {
-      filtered = filtered.filter((p) => p.status?.name === filterCategory || p.category?.name === filterCategory);
-    }
-
-    if (filterStatus === 'public') {
-      filtered = filtered.filter((p) => p.is_active && p.is_available);
-    } else if (filterStatus === 'private') {
-      filtered = filtered.filter((p) => !p.is_active || !p.is_available);
-    }
-
-    setFilteredProperties(filtered);
-  };
-
   const onRefresh = () => {
     setRefreshing(true);
     setCurrentPage(1);
@@ -168,7 +138,7 @@ export default function PropertiesScreen({ navigation }: any) {
   };
 
   const selectAll = () => {
-    setSelectedIds(new Set(filteredProperties.map(p => p.id)));
+    setSelectedIds(new Set(properties.map((p: Property) => p.id)));
   };
 
   const clearSelection = () => {
@@ -331,9 +301,14 @@ export default function PropertiesScreen({ navigation }: any) {
         </View>
 
         <View style={styles.propertyDetails}>
-          <Text style={styles.propertyPrice}>
-            {formatPrice(item.sale_price || item.rental_price_monthly || 0, item.status?.name)}
-          </Text>
+          <View style={styles.priceAreaRow}>
+            <Text style={styles.propertyPrice}>
+              {formatPrice(item.sale_price || item.rental_price_monthly || 0, item.status?.name)}
+            </Text>
+            {item.total_area && (
+              <Text style={styles.propertyArea}>📐 {item.total_area} m²</Text>
+            )}
+          </View>
           <View style={styles.badges}>
             {item.type?.name && (
               <View style={styles.badge}>
@@ -472,7 +447,7 @@ export default function PropertiesScreen({ navigation }: any) {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={isDesktop ? styles.desktopWrapper : undefined}>
         <FlatList
-          data={filteredProperties}
+          data={properties}
           renderItem={renderPropertyCard}
           keyExtractor={(item) => item.id}
           key={numColumns} // Force re-render when columns change
@@ -694,6 +669,17 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.primary,
+  },
+  priceAreaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.xs,
+  },
+  propertyArea: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   badges: {
     flexDirection: 'row',
