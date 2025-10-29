@@ -16,10 +16,7 @@ export default function LanguageSwitcher() {
       onPress={toggleLanguage}
       activeOpacity={0.7}
     >
-      <View style={styles.flagContainer}>
-        <Text style={styles.flag}>{isEnglish ? '🇪🇬' : '🇺🇸'}</Text>
-      </View>
-      <Text style={styles.label}>{isEnglish ? 'عربي' : 'English'}</Text>
+      <Text style={styles.label}>{isEnglish ? 'AR' : 'EN'}</Text>
     </TouchableOpacity>
   );
 }
@@ -28,24 +25,17 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#eff6ff',
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
-    gap: 6,
-  },
-  flagContainer: {
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  flag: {
-    fontSize: 18,
+    minWidth: 50,
   },
   label: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
     color: '#2563eb',
+    letterSpacing: 0.5,
   },
 });

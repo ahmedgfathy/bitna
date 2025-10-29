@@ -19,6 +19,7 @@ import LeadDetailScreen from '../screens/dashboard/LeadDetailScreen';
 import LeadFormScreen from '../screens/dashboard/LeadFormScreen';
 import EmployeesScreen from '../screens/dashboard/EmployeesScreen';
 import SettingsScreen from '../screens/dashboard/SettingsScreen';
+import AdministrationScreen from '../screens/dashboard/AdministrationScreen';
 
 // Import public screens for authenticated users
 import HomeScreen from '../screens/public/HomeScreen';
@@ -138,6 +139,14 @@ export default function AuthenticatedNavigator() {
         {() => (
           <MainLayout>
             <SettingsScreen />
+          </MainLayout>
+        )}
+      </Stack.Screen>
+      
+      <Stack.Screen name="Administration">
+        {() => (
+          <MainLayout>
+            <AdministrationScreen />
           </MainLayout>
         )}
       </Stack.Screen>

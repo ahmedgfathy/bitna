@@ -16,6 +16,7 @@ export type AuthenticatedStackParamList = {
   LeadForm: { leadId?: string; mode?: 'create' | 'edit' };
   Team: undefined;
   Settings: undefined;
+  Administration: undefined;
   Home: undefined; // Public home accessible while logged in
 };
 

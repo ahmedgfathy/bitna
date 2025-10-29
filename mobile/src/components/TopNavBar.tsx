@@ -27,6 +27,7 @@ export default function TopNavBar() {
     { name: 'Leads', icon: 'document-text-outline', route: 'Leads' },
     ...(tenant?.type === 'company' ? [{ name: 'Team', icon: 'people-outline', route: 'Team' }] : []),
     { name: 'Settings', icon: 'settings-outline', route: 'Settings' },
+    { name: 'Administration', icon: 'shield-outline', route: 'Administration' },
   ];
 
   const handleNavigate = (route: string) => {
@@ -251,7 +252,7 @@ const styles = StyleSheet.create({
   },
   navContent: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
+    justifyContent: 'center',
     alignItems: 'center',
     flex: 1,
     paddingVertical: 4,
@@ -263,6 +264,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
     paddingHorizontal: 20,
+    marginLeft: 'auto',
+    marginRight: 'auto',
   },
   navItem: {
     alignItems: 'center',
