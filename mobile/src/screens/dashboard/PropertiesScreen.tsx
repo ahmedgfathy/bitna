@@ -13,18 +13,24 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import theme from '../../config/theme';
 import { Property } from '../../types/property';
 import { useAuthStore } from '../../stores/authStore';
 import CSVImportModal from '../../components/CSVImportModal';
 import apiClient from '../../services/api';
+import { AuthenticatedStackParamList } from '../../types/navigation';
 
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 const isDesktop = isWeb && width > 768;
 const numColumns = isDesktop ? (width > 1200 ? 3 : 2) : 1;
 
-export default function PropertiesScreen({ navigation }: any) {
+type PropertiesScreenNavigationProp = NativeStackNavigationProp<AuthenticatedStackParamList>;
+
+export default function PropertiesScreen() {
+  const navigation = useNavigation<PropertiesScreenNavigationProp>();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -93,6 +99,9 @@ export default function PropertiesScreen({ navigation }: any) {
           setProperties(mappedProperties);
         }
         
+        console.log('🏠 Properties loaded:', mappedProperties.length);
+        console.log('🏠 First property:', mappedProperties[0]?.id, mappedProperties[0]?.property_name);
+        
         // Update pagination state
         setCurrentPage(response.data.page);
         setTotalPages(response.data.totalPages);
@@ -128,13 +137,17 @@ export default function PropertiesScreen({ navigation }: any) {
   };
 
   const toggleSelection = (id: string) => {
+    console.log('🟢 Toggle selection called for:', id);
     const newSelected = new Set(selectedIds);
     if (newSelected.has(id)) {
+      console.log('🟢 Removing from selection');
       newSelected.delete(id);
     } else {
+      console.log('🟢 Adding to selection');
       newSelected.add(id);
     }
     setSelectedIds(newSelected);
+    console.log('🟢 New selection size:', newSelected.size);
   };
 
   const selectAll = () => {
@@ -268,11 +281,14 @@ export default function PropertiesScreen({ navigation }: any) {
     const hasSelections = selectedIds.size > 0;
 
     const handleCardPress = () => {
+      console.log('🔵 Card pressed:', item.id, 'Has selections:', hasSelections);
       if (hasSelections) {
         // If in selection mode, toggle selection
+        console.log('🔵 Toggling selection');
         toggleSelection(item.id);
       } else {
         // Otherwise navigate to detail
+        console.log('🔵 Navigating to PropertyDetail');
         navigation.navigate('PropertyDetail', { propertyId: item.id });
       }
     };
@@ -344,7 +360,7 @@ export default function PropertiesScreen({ navigation }: any) {
         <View style={styles.headerButtons}>
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => navigation.navigate('PropertyForm')}
+            onPress={() => navigation.navigate('PropertyForm', { mode: 'create' })}
           >
             <Text style={styles.addButtonText}>➕ Add Property</Text>
           </TouchableOpacity>
