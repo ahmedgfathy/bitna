@@ -348,6 +348,353 @@ export const togglePropertyVisibility = async (
   });
 };
 
+// Get a single property by ID (tenant-scoped)
+export const getPropertyById = async (propertyId: string, tenantId: string) => {
+  return await prisma.property.findFirst({
+    where: {
+      id: propertyId,
+      company_id: tenantId,
+      is_deleted: false,
+    },
+    include: {
+      // Classification
+      property_types: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+          icon: true,
+        },
+      },
+      property_statuses: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+          color: true,
+        },
+      },
+      property_categories: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+          icon: true,
+          color: true,
+        },
+      },
+      property_sub_categories: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+        },
+      },
+      
+      // Location
+      regions: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+        },
+      },
+      districts: {
+        select: {
+          id: true,
+          name: true,
+          region_id: true,
+        },
+      },
+      neighborhoods: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          district_id: true,
+        },
+      },
+      compounds: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+          address: true,
+        },
+      },
+      
+      // Statuses
+      finishing_statuses: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+        },
+      },
+      furnishing_statuses: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+        },
+      },
+      construction_statuses: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+        },
+      },
+      property_conditions: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+        },
+      },
+      ownership_statuses: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+        },
+      },
+      
+      // Features & View/Orientation
+      view_types: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+        },
+      },
+      orientations: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+        },
+      },
+      
+      // Pricing
+      currencies: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          symbol: true,
+          display_name: true,
+        },
+      },
+      
+      // Listing
+      listing_purposes: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+        },
+      },
+      priority_levels: {
+        select: {
+          id: true,
+          name: true,
+          display_name: true,
+          description: true,
+          color: true,
+        },
+      },
+      
+      // Media
+      property_images: {
+        orderBy: { display_order: 'asc' },
+        select: {
+          id: true,
+          image_url: true,
+          thumbnail_url: true,
+          title: true,
+          caption: true,
+          alt_text: true,
+          is_primary: true,
+          display_order: true,
+          width: true,
+          height: true,
+        },
+      },
+      property_documents: {
+        select: {
+          id: true,
+          file_url: true,
+          document_type: true,
+          title: true,
+          description: true,
+          file_name: true,
+          file_size: true,
+          file_format: true,
+        },
+      },
+      
+      // Amenities & Features (with full relation)
+      property_amenities: {
+        include: {
+          amenities: {
+            select: {
+              id: true,
+              name: true,
+              icon: true,
+              category: true,
+            },
+          },
+        },
+      },
+      property_features: {
+        include: {
+          features: {
+            select: {
+              id: true,
+              name: true,
+              icon: true,
+              category: true,
+            },
+          },
+        },
+      },
+      
+      // Utilities & Distances
+      property_utilities: {
+        select: {
+          id: true,
+          utility_type: true,
+          provider_name: true,
+          account_number: true,
+          is_connected: true,
+          monthly_fee: true,
+          connection_date: true,
+          notes: true,
+        },
+      },
+      property_distances: {
+        select: {
+          id: true,
+          location_type: true,
+          location_name: true,
+          distance_km: true,
+          travel_time_minutes: true,
+          transport_mode: true,
+          notes: true,
+        },
+      },
+      
+      // Users
+      users_properties_assigned_handler_idTousers: {
+        select: {
+          id: true,
+          name: true,
+          mobile: true,
+          email: true,
+          role: true,
+        },
+      },
+      users_properties_created_by_idTousers: {
+        select: {
+          id: true,
+          name: true,
+          mobile: true,
+          email: true,
+        },
+      },
+      users_properties_updated_by_idTousers: {
+        select: {
+          id: true,
+          name: true,
+          mobile: true,
+          email: true,
+        },
+      },
+    },
+  });
+};
+
+// Update a property (tenant-scoped)
+export const updateProperty = async (
+  propertyId: string,
+  tenantId: string,
+  data: any
+) => {
+  // First verify the property belongs to the tenant
+  const existingProperty = await prisma.property.findFirst({
+    where: {
+      id: propertyId,
+      company_id: tenantId,
+      is_deleted: false,
+    },
+  });
+
+  if (!existingProperty) {
+    return null;
+  }
+
+  return await prisma.property.update({
+    where: { id: propertyId },
+    data: {
+      ...data,
+      updated_at: new Date(),
+    },
+    include: {
+      property_types: true,
+      property_statuses: true,
+      property_categories: true,
+      regions: true,
+      districts: true,
+      compounds: true,
+      finishing_statuses: true,
+      furnishing_statuses: true,
+      property_images: {
+        orderBy: { display_order: 'asc' },
+      },
+    },
+  });
+};
+
+// Delete a property (tenant-scoped, soft delete)
+export const deleteProperty = async (propertyId: string, tenantId: string) => {
+  // First verify the property belongs to the tenant
+  const existingProperty = await prisma.property.findFirst({
+    where: {
+      id: propertyId,
+      company_id: tenantId,
+      is_deleted: false,
+    },
+  });
+
+  if (!existingProperty) {
+    throw new Error('Property not found');
+  }
+
+  // Soft delete
+  return await prisma.property.update({
+    where: { id: propertyId },
+    data: {
+      is_deleted: true,
+      is_published: false,
+      show_on_website: false,
+    },
+  });
+};
+
 /**
  * LEAD OPERATIONS
  * 

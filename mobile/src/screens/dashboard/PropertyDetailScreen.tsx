@@ -94,11 +94,16 @@ export default function PropertyDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              // TODO: API call to delete
-              // await fetch(`/api/properties/${propertyId}`, { method: 'DELETE' });
-              Alert.alert('Success', 'Property deleted successfully');
-              navigation.goBack();
+              const response = await apiClient.delete(`/properties/${propertyId}`);
+              
+              if (response.data.status === 'success') {
+                Alert.alert('Success', 'Property deleted successfully');
+                navigation.goBack();
+              } else {
+                throw new Error('Failed to delete property');
+              }
             } catch (error) {
+              console.error('Error deleting property:', error);
               Alert.alert('Error', 'Failed to delete property');
             }
           },
@@ -238,6 +243,13 @@ export default function PropertyDetailScreen() {
               </View>
             )}
             
+            {property.sub_category?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Sub Category:</Text>
+                <Text style={styles.detailValue}>{property.sub_category.name}</Text>
+              </View>
+            )}
+            
             {property.status?.name && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Status:</Text>
@@ -259,6 +271,39 @@ export default function PropertyDetailScreen() {
               </View>
             )}
             
+            {property.furnishing_status?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Furnishing:</Text>
+                <Text style={styles.detailValue}>{property.furnishing_status.name}</Text>
+              </View>
+            )}
+            
+            {property.construction_status?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Construction:</Text>
+                <Text style={styles.detailValue}>{property.construction_status.name}</Text>
+              </View>
+            )}
+            
+            {property.condition?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Condition:</Text>
+                <Text style={styles.detailValue}>{property.condition.name}</Text>
+              </View>
+            )}
+            
+            {property.ownership_status?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Ownership:</Text>
+                <Text style={styles.detailValue}>{property.ownership_status.name}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Dimensions */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Dimensions</Text>
+            
             {property.bedrooms_count != null && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Bedrooms:</Text>
@@ -273,10 +318,31 @@ export default function PropertyDetailScreen() {
               </View>
             )}
             
+            {property.living_rooms_count != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Living Rooms:</Text>
+                <Text style={styles.detailValue}>{property.living_rooms_count}</Text>
+              </View>
+            )}
+            
+            {property.kitchen_count != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Kitchens:</Text>
+                <Text style={styles.detailValue}>{property.kitchen_count}</Text>
+              </View>
+            )}
+            
             {property.total_area != null && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Total Area:</Text>
                 <Text style={styles.detailValue}>{property.total_area} m²</Text>
+              </View>
+            )}
+            
+            {property.built_area != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Built Area:</Text>
+                <Text style={styles.detailValue}>{property.built_area} m²</Text>
               </View>
             )}
             
@@ -286,6 +352,39 @@ export default function PropertyDetailScreen() {
                 <Text style={styles.detailValue}>{property.land_area} m²</Text>
               </View>
             )}
+            
+            {property.garden_area != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Garden Area:</Text>
+                <Text style={styles.detailValue}>{property.garden_area} m²</Text>
+              </View>
+            )}
+            
+            {property.roof_area != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Roof Area:</Text>
+                <Text style={styles.detailValue}>{property.roof_area} m²</Text>
+              </View>
+            )}
+            
+            {property.floor_number && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Floor:</Text>
+                <Text style={styles.detailValue}>{property.floor_number}</Text>
+              </View>
+            )}
+            
+            {property.total_floors_in_building != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Total Floors in Building:</Text>
+                <Text style={styles.detailValue}>{property.total_floors_in_building}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Location */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Location</Text>
             
             {property.region?.display_name && (
               <View style={styles.detailRow}>
@@ -301,6 +400,13 @@ export default function PropertyDetailScreen() {
               </View>
             )}
             
+            {property.neighborhood?.display_name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Neighborhood:</Text>
+                <Text style={styles.detailValue}>{property.neighborhood.display_name}</Text>
+              </View>
+            )}
+            
             {property.compound?.name && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Compound:</Text>
@@ -308,10 +414,10 @@ export default function PropertyDetailScreen() {
               </View>
             )}
             
-            {property.floor_number && (
+            {property.building_name && (
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Floor:</Text>
-                <Text style={styles.detailValue}>{property.floor_number}</Text>
+                <Text style={styles.detailLabel}>Building:</Text>
+                <Text style={styles.detailValue}>{property.building_name}</Text>
               </View>
             )}
             
@@ -321,6 +427,298 @@ export default function PropertyDetailScreen() {
                 <Text style={styles.detailValue}>
                   {property.latitude.toFixed(4)}, {property.longitude.toFixed(4)}
                 </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Features */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Features</Text>
+            
+            {property.view_type?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>View:</Text>
+                <Text style={styles.detailValue}>{property.view_type.name}</Text>
+              </View>
+            )}
+            
+            {property.orientation?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Orientation:</Text>
+                <Text style={styles.detailValue}>{property.orientation.name}</Text>
+              </View>
+            )}
+            
+            {property.has_garden !== null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Has Garden:</Text>
+                <Text style={styles.detailValue}>{property.has_garden ? '✓ Yes' : '✗ No'}</Text>
+              </View>
+            )}
+            
+            {property.has_pool !== null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Has Pool:</Text>
+                <Text style={styles.detailValue}>{property.has_pool ? '✓ Yes' : '✗ No'}</Text>
+              </View>
+            )}
+            
+            {property.has_gym !== null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Has Gym:</Text>
+                <Text style={styles.detailValue}>{property.has_gym ? '✓ Yes' : '✗ No'}</Text>
+              </View>
+            )}
+            
+            {property.has_parking !== null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Has Parking:</Text>
+                <Text style={styles.detailValue}>{property.has_parking ? '✓ Yes' : '✗ No'}</Text>
+              </View>
+            )}
+            
+            {property.parking_spaces != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Parking Spaces:</Text>
+                <Text style={styles.detailValue}>{property.parking_spaces}</Text>
+              </View>
+            )}
+            
+            {property.has_elevator !== null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Has Elevator:</Text>
+                <Text style={styles.detailValue}>{property.has_elevator ? '✓ Yes' : '✗ No'}</Text>
+              </View>
+            )}
+            
+            {property.has_balcony !== null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Has Balcony:</Text>
+                <Text style={styles.detailValue}>{property.has_balcony ? '✓ Yes' : '✗ No'}</Text>
+              </View>
+            )}
+            
+            {property.has_terrace !== null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Has Terrace:</Text>
+                <Text style={styles.detailValue}>{property.has_terrace ? '✓ Yes' : '✗ No'}</Text>
+              </View>
+            )}
+            
+            {property.has_security !== null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Has Security:</Text>
+                <Text style={styles.detailValue}>{property.has_security ? '✓ Yes' : '✗ No'}</Text>
+              </View>
+            )}
+            
+            {property.has_central_ac !== null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Central AC:</Text>
+                <Text style={styles.detailValue}>{property.has_central_ac ? '✓ Yes' : '✗ No'}</Text>
+              </View>
+            )}
+            
+            {property.has_kitchen_appliances !== null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Kitchen Appliances:</Text>
+                <Text style={styles.detailValue}>{property.has_kitchen_appliances ? '✓ Yes' : '✗ No'}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Amenities */}
+          {property.amenities && property.amenities.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Amenities</Text>
+              <View style={styles.badgeRow}>
+                {property.amenities.map((amenity: any, index: number) => (
+                  <View key={index} style={styles.badge}>
+                    <Text style={styles.badgeText}>{amenity.amenities?.name || amenity.name}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Features List */}
+          {property.features && property.features.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Additional Features</Text>
+              <View style={styles.badgeRow}>
+                {property.features.map((feature: any, index: number) => (
+                  <View key={index} style={styles.badge}>
+                    <Text style={styles.badgeText}>{feature.features?.name || feature.name}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Utilities */}
+          {property.utilities && property.utilities.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Utilities</Text>
+              {property.utilities.map((utility: any, index: number) => (
+                <View key={index} style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>{utility.utility_type}:</Text>
+                  <Text style={styles.detailValue}>
+                    {utility.is_connected ? '✓ Connected' : '✗ Not Connected'}
+                    {utility.provider_name && ` (${utility.provider_name})`}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Distances */}
+          {property.distances && property.distances.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Nearby Locations</Text>
+              {property.distances.map((distance: any, index: number) => (
+                <View key={index} style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>{distance.location_name || distance.location_type}:</Text>
+                  <Text style={styles.detailValue}>
+                    {distance.distance_km} km
+                    {distance.travel_time_minutes && ` (${distance.travel_time_minutes} min)`}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Pricing Information */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Pricing</Text>
+            
+            {property.listing_purpose?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Listing Purpose:</Text>
+                <Text style={styles.detailValue}>{property.listing_purpose.name}</Text>
+              </View>
+            )}
+            
+            {property.payment_plan && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Payment Plan:</Text>
+                <Text style={styles.detailValue}>{property.payment_plan}</Text>
+              </View>
+            )}
+            
+            {property.down_payment_percentage != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Down Payment:</Text>
+                <Text style={styles.detailValue}>{property.down_payment_percentage}%</Text>
+              </View>
+            )}
+            
+            {property.installment_years != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Installment Years:</Text>
+                <Text style={styles.detailValue}>{property.installment_years} years</Text>
+              </View>
+            )}
+            
+            {property.currency?.code && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Currency:</Text>
+                <Text style={styles.detailValue}>{property.currency.code} ({property.currency.symbol})</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Owner Information */}
+          {(property.owner_name || property.owner_phone || property.owner_email) && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Owner Information</Text>
+              
+              {property.owner_name && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Name:</Text>
+                  <Text style={styles.detailValue}>{property.owner_name}</Text>
+                </View>
+              )}
+              
+              {property.owner_phone && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Phone:</Text>
+                  <Text style={styles.detailValue}>{property.owner_phone}</Text>
+                </View>
+              )}
+              
+              {property.owner_email && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Email:</Text>
+                  <Text style={styles.detailValue}>{property.owner_email}</Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Additional Info */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Additional Information</Text>
+            
+            {property.priority_level?.name && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Priority:</Text>
+                <Text style={styles.detailValue}>{property.priority_level.name}</Text>
+              </View>
+            )}
+            
+            {property.is_featured !== null && property.is_featured !== undefined && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Featured:</Text>
+                <Text style={styles.detailValue}>{property.is_featured ? '✓ Yes' : '✗ No'}</Text>
+              </View>
+            )}
+            
+            {property.is_verified !== null && property.is_verified !== undefined && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Verified:</Text>
+                <Text style={styles.detailValue}>{property.is_verified ? '✓ Yes' : '✗ No'}</Text>
+              </View>
+            )}
+            
+            {property.published_at && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Published:</Text>
+                <Text style={styles.detailValue}>{new Date(property.published_at).toLocaleDateString()}</Text>
+              </View>
+            )}
+            
+            {property.available_from && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Available From:</Text>
+                <Text style={styles.detailValue}>{new Date(property.available_from).toLocaleDateString()}</Text>
+              </View>
+            )}
+            
+            {property.views_count != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Views:</Text>
+                <Text style={styles.detailValue}>{property.views_count}</Text>
+              </View>
+            )}
+            
+            {property.inquiries_count != null && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Inquiries:</Text>
+                <Text style={styles.detailValue}>{property.inquiries_count}</Text>
+              </View>
+            )}
+            
+            {property.created_at && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Created:</Text>
+                <Text style={styles.detailValue}>{new Date(property.created_at).toLocaleDateString()}</Text>
+              </View>
+            )}
+            
+            {property.updated_at && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Last Updated:</Text>
+                <Text style={styles.detailValue}>{new Date(property.updated_at).toLocaleDateString()}</Text>
               </View>
             )}
           </View>
@@ -496,3 +894,4 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
 });
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Dimensions,
   Platform,
   Image,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -37,9 +38,17 @@ export default function PropertiesScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [filterCategory, setFilterCategory] = useState<string>('');
-  const [filterStatus, setFilterStatus] = useState<string>('');
+  const [activeFilters, setActiveFilters] = useState<{
+    forSale?: boolean;
+    forRent?: boolean;
+    propertyTypes?: string[];
+    bedrooms?: number[];
+    priceRange?: { min?: number; max?: number };
+    featured?: boolean;
+  }>({});
+  const [showFilters, setShowFilters] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   
   // Pagination state
@@ -52,6 +61,15 @@ export default function PropertiesScreen() {
   useEffect(() => {
     loadProperties();
   }, []);
+
+  // Debounce search input to prevent interrupting typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const loadProperties = async (page: number = 1, append: boolean = false) => {
     try {
@@ -76,14 +94,24 @@ export default function PropertiesScreen() {
           
           return {
             ...prop,
+            // Map API field names to frontend expected names
+            type: prop.property_types || prop.type,
+            status: prop.property_statuses || prop.status,
+            category: prop.property_categories || prop.category,
+            region: prop.regions || prop.region,
+            district: prop.districts || prop.district,
+            compound: prop.compounds || prop.compound,
+            finishing_status: prop.finishing_statuses || prop.finishing_status,
+            images: prop.property_images || prop.images || [],
+            
             // Pricing
             sale_price: salePrice,
             rental_price_monthly: rentalPrice,
             price: salePrice || rentalPrice || 0, // Fallback for display
             
             // Coordinates
-            latitude: typeof prop.latitude === 'string' ? parseFloat(prop.latitude) : prop.latitude,
-            longitude: typeof prop.longitude === 'string' ? parseFloat(prop.longitude) : prop.longitude,
+            latitude: typeof prop.gps_latitude === 'string' ? parseFloat(prop.gps_latitude) : prop.gps_latitude,
+            longitude: typeof prop.gps_longitude === 'string' ? parseFloat(prop.gps_longitude) : prop.gps_longitude,
             
             // Areas
             land_area: prop.land_area ? (typeof prop.land_area === 'string' ? parseFloat(prop.land_area) : prop.land_area) : null,
@@ -136,6 +164,139 @@ export default function PropertiesScreen() {
     setCurrentPage(1);
     loadProperties(1, false);
   };
+
+  // Filter and search properties - using debouncedSearch instead of searchQuery
+  const filteredProperties = useMemo(() => {
+    let filtered = properties;
+
+    // Search query filter - using debounced value
+    if (debouncedSearch.trim()) {
+      const query = debouncedSearch.toLowerCase();
+      filtered = filtered.filter(property => {
+        // Cast to any to access API response fields
+        const prop = property as any;
+        const searchableFields = [
+          prop.property_name,
+          prop.title,
+          prop.description,
+          prop.property_number,
+          prop.type?.name,
+          prop.type?.display_name,
+          prop.status?.name,
+          prop.status?.display_name,
+          prop.category?.name,
+          prop.category?.display_name,
+          prop.region?.name,
+          prop.region?.display_name,
+          prop.district?.name,
+          prop.compound?.name,
+          prop.compound?.display_name,
+          prop.address,
+          prop.building_name,
+        ];
+        
+        return searchableFields.some(field => 
+          field && typeof field === 'string' && field.toLowerCase().includes(query)
+        );
+      });
+    }
+
+    // For Sale filter
+    if (activeFilters.forSale) {
+      filtered = filtered.filter(p => p.sale_price && p.sale_price > 0);
+    }
+
+    // For Rent filter
+    if (activeFilters.forRent) {
+      filtered = filtered.filter(p => 
+        (p.rental_price_monthly && p.rental_price_monthly > 0) ||
+        (p.rental_price_yearly && p.rental_price_yearly > 0)
+      );
+    }
+
+    // Property types filter
+    if (activeFilters.propertyTypes && activeFilters.propertyTypes.length > 0) {
+      filtered = filtered.filter(p => 
+        p.type?.name && activeFilters.propertyTypes?.includes(p.type.name)
+      );
+    }
+
+    // Bedrooms filter
+    if (activeFilters.bedrooms && activeFilters.bedrooms.length > 0) {
+      filtered = filtered.filter(p => 
+        p.bedrooms_count && activeFilters.bedrooms?.includes(p.bedrooms_count)
+      );
+    }
+
+    // Price range filter
+    if (activeFilters.priceRange) {
+      filtered = filtered.filter(p => {
+        const price = p.sale_price || p.rental_price_monthly || 0;
+        const { min, max } = activeFilters.priceRange || {};
+        return (!min || price >= min) && (!max || price <= max);
+      });
+    }
+
+    // Featured filter
+    if (activeFilters.featured) {
+      filtered = filtered.filter(p => p.is_featured);
+    }
+
+    return filtered;
+  }, [properties, debouncedSearch, activeFilters]);
+
+  const toggleFilter = (filterType: string, value?: any) => {
+    setActiveFilters(prev => {
+      const newFilters = { ...prev };
+      
+      switch (filterType) {
+        case 'forSale':
+          newFilters.forSale = !prev.forSale;
+          if (newFilters.forSale) newFilters.forRent = false;
+          break;
+        case 'forRent':
+          newFilters.forRent = !prev.forRent;
+          if (newFilters.forRent) newFilters.forSale = false;
+          break;
+        case 'featured':
+          newFilters.featured = !prev.featured;
+          break;
+        case 'bedrooms':
+          if (!newFilters.bedrooms) newFilters.bedrooms = [];
+          const bedroomIndex = newFilters.bedrooms.indexOf(value);
+          if (bedroomIndex > -1) {
+            newFilters.bedrooms.splice(bedroomIndex, 1);
+          } else {
+            newFilters.bedrooms.push(value);
+          }
+          break;
+        case 'propertyType':
+          if (!newFilters.propertyTypes) newFilters.propertyTypes = [];
+          const typeIndex = newFilters.propertyTypes.indexOf(value);
+          if (typeIndex > -1) {
+            newFilters.propertyTypes.splice(typeIndex, 1);
+          } else {
+            newFilters.propertyTypes.push(value);
+          }
+          break;
+        case 'clearAll':
+          return {};
+      }
+      
+      return newFilters;
+    });
+  };
+
+  const hasActiveFilters = useMemo(() => {
+    return Object.values(activeFilters).some(v => 
+      Array.isArray(v) ? v.length > 0 : Boolean(v)
+    );
+  }, [activeFilters]);
+
+  // Optimize search input handler
+  const handleSearchChange = useCallback((text: string) => {
+    setSearchQuery(text);
+  }, []);
 
   const toggleSelection = (id: string) => {
     console.log('🟢 Toggle selection called for:', id);
@@ -460,49 +621,85 @@ export default function PropertiesScreen() {
         style={styles.searchInput}
         placeholder="Search properties..."
         value={searchQuery}
-        onChangeText={setSearchQuery}
+        onChangeText={handleSearchChange}
         placeholderTextColor={theme.colors.textSecondary}
+        returnKeyType="search"
+        autoCorrect={false}
+        autoCapitalize="none"
       />
 
-      <View style={styles.filtersRow}>
+      {/* Enhanced Filter Chips */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.filtersRow}
+        contentContainerStyle={styles.filtersContent}
+      >
+        {/* For Sale / For Rent */}
         <TouchableOpacity
-          style={[styles.filterChip, filterStatus === 'public' && styles.filterChipActive]}
-          onPress={() => setFilterStatus(filterStatus === 'public' ? '' : 'public')}
+          style={[styles.filterChip, activeFilters.forSale && styles.filterChipActive]}
+          onPress={() => toggleFilter('forSale')}
         >
-          <Text style={[styles.filterChipText, filterStatus === 'public' && styles.filterChipTextActive]}>
-            Public
+          <Text style={[styles.filterChipText, activeFilters.forSale && styles.filterChipTextActive]}>
+            🏷️ For Sale
           </Text>
         </TouchableOpacity>
+        
         <TouchableOpacity
-          style={[styles.filterChip, filterStatus === 'private' && styles.filterChipActive]}
-          onPress={() => setFilterStatus(filterStatus === 'private' ? '' : 'private')}
+          style={[styles.filterChip, activeFilters.forRent && styles.filterChipActive]}
+          onPress={() => toggleFilter('forRent')}
         >
-          <Text style={[styles.filterChipText, filterStatus === 'private' && styles.filterChipTextActive]}>
-            Private
+          <Text style={[styles.filterChipText, activeFilters.forRent && styles.filterChipTextActive]}>
+            🏠 For Rent
           </Text>
         </TouchableOpacity>
+
+        {/* Bedrooms */}
+        {[1, 2, 3, 4, 5].map(num => (
+          <TouchableOpacity
+            key={`bed-${num}`}
+            style={[
+              styles.filterChip, 
+              activeFilters.bedrooms?.includes(num) && styles.filterChipActive
+            ]}
+            onPress={() => toggleFilter('bedrooms', num)}
+          >
+            <Text style={[
+              styles.filterChipText, 
+              activeFilters.bedrooms?.includes(num) && styles.filterChipTextActive
+            ]}>
+              🛏️ {num} Bed{num > 1 ? 's' : ''}
+            </Text>
+          </TouchableOpacity>
+        ))}
+
+        {/* Featured */}
         <TouchableOpacity
-          style={[styles.filterChip, filterCategory === 'For Sale' && styles.filterChipActive]}
-          onPress={() => setFilterCategory(filterCategory === 'For Sale' ? '' : 'For Sale')}
+          style={[styles.filterChip, activeFilters.featured && styles.filterChipActive]}
+          onPress={() => toggleFilter('featured')}
         >
-          <Text style={[styles.filterChipText, filterCategory === 'For Sale' && styles.filterChipTextActive]}>
-            For Sale
+          <Text style={[styles.filterChipText, activeFilters.featured && styles.filterChipTextActive]}>
+            ⭐ Featured
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.filterChip, filterCategory === 'For Rent' && styles.filterChipActive]}
-          onPress={() => setFilterCategory(filterCategory === 'For Rent' ? '' : 'For Rent')}
-        >
-          <Text style={[styles.filterChipText, filterCategory === 'For Rent' && styles.filterChipTextActive]}>
-            For Rent
-          </Text>
-        </TouchableOpacity>
-      </View>
+
+        {/* Clear All Filters */}
+        {hasActiveFilters && (
+          <TouchableOpacity
+            style={[styles.filterChip, styles.filterChipClear]}
+            onPress={() => toggleFilter('clearAll')}
+          >
+            <Text style={[styles.filterChipText, styles.filterChipTextClear]}>
+              ✕ Clear All
+            </Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
 
       <Text style={styles.resultsCount}>
-        {totalCount} propert{totalCount === 1 ? 'y' : 'ies'}
+        {filteredProperties.length} of {totalCount} propert{totalCount === 1 ? 'y' : 'ies'}
         {selectedIds.size > 0 && ` • ${selectedIds.size} selected`}
-        {currentPage > 1 && ` • Page ${currentPage} of ${totalPages}`}
+        {hasActiveFilters && ' • Filtered'}
       </Text>
     </View>
   );
@@ -546,7 +743,7 @@ export default function PropertiesScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={isDesktop ? styles.desktopWrapper : undefined}>
         <FlatList
-          data={properties}
+          data={filteredProperties}
           renderItem={renderPropertyCard}
           keyExtractor={(item) => item.id}
           key={numColumns} // Force re-render when columns change
@@ -575,8 +772,8 @@ export default function PropertiesScreen() {
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>No properties found</Text>
               <Text style={styles.emptyStateSubtext}>
-                {searchQuery || filterCategory || filterStatus
-                  ? 'Try adjusting filters'
+                {searchQuery || hasActiveFilters
+                  ? 'Try adjusting filters or search query'
                   : 'Create your first property'}
               </Text>
             </View>
@@ -658,6 +855,9 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
     marginBottom: theme.spacing.md,
   },
+  filtersContent: {
+    paddingRight: theme.spacing.lg,
+  },
   filterChip: {
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.xs,
@@ -665,22 +865,34 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    marginRight: theme.spacing.sm,
   },
   filterChipActive: {
     backgroundColor: theme.colors.primary,
     borderColor: theme.colors.primary,
   },
+  filterChipClear: {
+    backgroundColor: '#fee2e2',
+    borderColor: '#f87171',
+  },
   filterChipText: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.textPrimary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
   filterChipTextActive: {
     color: theme.colors.white,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  filterChipTextClear: {
+    color: '#dc2626',
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   resultsCount: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.textSecondary,
     fontWeight: theme.typography.fontWeight.medium,
+    marginTop: theme.spacing.sm,
   },
   
   // Modern Card Styles
