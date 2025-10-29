@@ -6,15 +6,27 @@ const router = Router();
 
 /**
  * GET /api/properties
- * Get all properties for the authenticated user's tenant
+ * Get all properties for the authenticated user's tenant with pagination
  */
 router.get('/', tenantIsolation, async (req, res) => {
   try {
-    const properties = await db.getPropertiesByTenant(req.tenantId!);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const [properties, total] = await Promise.all([
+      db.getPropertiesByTenant(req.tenantId!, skip, limit),
+      db.countPropertiesByTenant(req.tenantId!)
+    ]);
+
     res.json({
       status: 'success',
       data: properties,
       count: properties.length,
+      total: total,
+      page: page,
+      totalPages: Math.ceil(total / limit),
+      hasMore: skip + properties.length < total,
     });
   } catch (error) {
     res.status(500).json({

@@ -172,9 +172,11 @@ export const createProperty = async (data: {
 };
 
 // Get all properties for a tenant (company)
-export const getPropertiesByTenant = async (tenantId: string) => {
+export const getPropertiesByTenant = async (tenantId: string, skip: number = 0, take: number = 20) => {
   return await prisma.property.findMany({
     where: { company_id: tenantId },
+    skip,
+    take,
     include: {
       property_types: true,
       property_statuses: true,
@@ -194,6 +196,59 @@ export const getPropertiesByTenant = async (tenantId: string) => {
       },
     },
     orderBy: { created_at: 'desc' },
+  });
+};
+
+// Count total properties for a tenant
+export const countPropertiesByTenant = async (tenantId: string) => {
+  return await prisma.property.count({
+    where: { company_id: tenantId },
+  });
+};
+
+// Count published properties for a tenant
+export const countPublishedPropertiesByTenant = async (tenantId: string) => {
+  return await prisma.property.count({
+    where: {
+      company_id: tenantId,
+      is_published: true,
+      show_on_website: true,
+    },
+  });
+};
+
+// Get recent properties with details for dashboard
+export const getRecentProperties = async (tenantId: string, limit: number = 5) => {
+  return await prisma.property.findMany({
+    where: { company_id: tenantId },
+    take: limit,
+    orderBy: { created_at: 'desc' },
+    include: {
+      property_types: {
+        select: {
+          name: true,
+          display_name: true,
+        },
+      },
+      property_statuses: {
+        select: {
+          name: true,
+          display_name: true,
+        },
+      },
+      regions: {
+        select: {
+          name: true,
+          display_name: true,
+        },
+      },
+      currencies: {
+        select: {
+          code: true,
+          symbol: true,
+        },
+      },
+    },
   });
 };
 

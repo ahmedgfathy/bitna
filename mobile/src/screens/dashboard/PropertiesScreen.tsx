@@ -28,12 +28,20 @@ export default function PropertiesScreen({ navigation }: any) {
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [showImportModal, setShowImportModal] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const ITEMS_PER_PAGE = 20;
 
   useEffect(() => {
     loadProperties();
@@ -43,18 +51,19 @@ export default function PropertiesScreen({ navigation }: any) {
     filterPropertiesList();
   }, [searchQuery, filterCategory, filterStatus, properties]);
 
-  const loadProperties = async () => {
+  const loadProperties = async (page: number = 1, append: boolean = false) => {
     try {
-      setLoading(true);
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
       
-      // Fetch from real API
-      const response = await apiClient.get('/properties');
+      // Fetch from real API with pagination
+      const response = await apiClient.get(`/properties?page=${page}&limit=${ITEMS_PER_PAGE}`);
       
       console.log('🏠 API Response:', response.data);
-      console.log('🏠 First property:', response.data.data?.[0]);
-      console.log('🏠 First property description:', response.data.data?.[0]?.description);
-      console.log('🏠 First property price:', response.data.data?.[0]?.price);
-      console.log('🏠 Total properties fetched:', response.data.count);
+      console.log('🏠 Page:', page, 'Total:', response.data.total, 'Has more:', response.data.hasMore);
       
       if (response.data.status === 'success') {
         // Map database fields to frontend display
@@ -81,8 +90,19 @@ export default function PropertiesScreen({ navigation }: any) {
           };
         });
         
-        console.log('🏠 First mapped property:', mappedProperties[0]);
-        setProperties(mappedProperties);
+        if (append) {
+          // Append to existing properties
+          setProperties(prev => [...prev, ...mappedProperties]);
+        } else {
+          // Replace properties
+          setProperties(mappedProperties);
+        }
+        
+        // Update pagination state
+        setCurrentPage(response.data.page);
+        setTotalPages(response.data.totalPages);
+        setTotalCount(response.data.total);
+        setHasMore(response.data.hasMore);
       } else {
         throw new Error(response.data.message || 'Failed to load properties');
       }
@@ -90,10 +110,19 @@ export default function PropertiesScreen({ navigation }: any) {
       console.error('Failed to load properties:', error);
       Alert.alert('Error', error.response?.data?.message || 'Failed to load properties');
       // Set empty array on error
-      setProperties([]);
+      if (!append) {
+        setProperties([]);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMoreProperties = () => {
+    if (!loadingMore && hasMore && currentPage < totalPages) {
+      loadProperties(currentPage + 1, true);
     }
   };
 
@@ -124,7 +153,8 @@ export default function PropertiesScreen({ navigation }: any) {
 
   const onRefresh = () => {
     setRefreshing(true);
-    loadProperties();
+    setCurrentPage(1);
+    loadProperties(1, false);
   };
 
   const toggleSelection = (id: string) => {
@@ -396,8 +426,9 @@ export default function PropertiesScreen({ navigation }: any) {
       </View>
 
       <Text style={styles.resultsCount}>
-        {filteredProperties.length} propert{filteredProperties.length === 1 ? 'y' : 'ies'}
+        {totalCount} propert{totalCount === 1 ? 'y' : 'ies'}
         {selectedIds.size > 0 && ` • ${selectedIds.size} selected`}
+        {currentPage > 1 && ` • Page ${currentPage} of ${totalPages}`}
       </Text>
     </View>
   );
@@ -451,6 +482,20 @@ export default function PropertiesScreen({ navigation }: any) {
           contentContainerStyle={[styles.listContent, isDesktop && styles.listContentDesktop]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />
+          }
+          onEndReached={loadMoreProperties}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={styles.loadMoreContainer}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+                <Text style={styles.loadMoreText}>Loading more...</Text>
+              </View>
+            ) : !hasMore && properties.length > 0 ? (
+              <View style={styles.loadMoreContainer}>
+                <Text style={styles.endOfListText}>✓ All {totalCount} properties loaded</Text>
+              </View>
+            ) : null
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
@@ -791,5 +836,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  loadMoreContainer: {
+    paddingVertical: theme.spacing.lg,
+    alignItems: 'center',
+  },
+  loadMoreText: {
+    marginTop: theme.spacing.sm,
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
+  },
+  endOfListText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textTertiary,
+    fontWeight: theme.typography.fontWeight.medium,
   },
 });

@@ -9,6 +9,17 @@ interface DashboardStats {
     total: number;
     public: number;
     private: number;
+    recent?: Array<{
+      id: string;
+      name: string;
+      price: number;
+      currency: string;
+      area: number;
+      region: string;
+      type: string;
+      status: string;
+      createdAt: string;
+    }>;
   };
   leads: {
     total: number;
@@ -95,25 +106,76 @@ export default function DashboardScreen() {
             <ActivityIndicator size="large" color="#2563eb" />
           </View>
         ) : (
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats?.properties.total || 0}</Text>
-              <Text style={styles.statLabel}>{t('properties')}</Text>
-              <Text style={styles.statSubtext}>{stats?.properties.public || 0} {t('public')}</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats?.leads.total || 0}</Text>
-              <Text style={styles.statLabel}>{t('leads')}</Text>
-              <Text style={styles.statSubtext}>{stats?.leads.qualified || 0} {t('qualified')}</Text>
-            </View>
-            {tenant?.type === 'company' && (
+          <>
+            <View style={styles.statsGrid}>
               <View style={styles.statCard}>
-                <Text style={styles.statValue}>{stats?.team.total || 0}</Text>
-                <Text style={styles.statLabel}>{t('teamMembers')}</Text>
-                <Text style={styles.statSubtext}>{stats?.team.managers || 0} {t('managers')}</Text>
+                <Text style={styles.statValue}>{stats?.properties.total || 0}</Text>
+                <Text style={styles.statLabel}>{t('properties')}</Text>
+                <Text style={styles.statSubtext}>{stats?.properties.public || 0} {t('public')}</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>{stats?.leads.total || 0}</Text>
+                <Text style={styles.statLabel}>{t('leads')}</Text>
+                <Text style={styles.statSubtext}>{stats?.leads.qualified || 0} {t('qualified')}</Text>
+              </View>
+              {tenant?.type === 'company' && (
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>{stats?.team.total || 0}</Text>
+                  <Text style={styles.statLabel}>{t('teamMembers')}</Text>
+                  <Text style={styles.statSubtext}>{stats?.team.managers || 0} {t('managers')}</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Recent Properties */}
+            {stats?.properties.recent && stats.properties.recent.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Recent Properties</Text>
+                {stats.properties.recent.map((property) => (
+                  <View key={property.id} style={styles.propertyCard}>
+                    <View style={styles.propertyHeader}>
+                      <Text style={styles.propertyName} numberOfLines={1}>
+                        {property.name}
+                      </Text>
+                      <Text style={styles.propertyPrice}>
+                        {property.price > 0
+                          ? property.price >= 1000000
+                            ? `${(property.price / 1000000).toFixed(1)}M ${property.currency}`
+                            : `${property.price.toLocaleString()} ${property.currency}`
+                          : 'Price not set'}
+                      </Text>
+                    </View>
+                    <View style={styles.propertyDetails}>
+                      <View style={styles.propertyDetailRow}>
+                        <Text style={styles.propertyDetailIcon}>📍</Text>
+                        <Text style={styles.propertyDetailText} numberOfLines={1}>
+                          {property.region}
+                        </Text>
+                      </View>
+                      <View style={styles.propertyDetailRow}>
+                        <Text style={styles.propertyDetailIcon}>📐</Text>
+                        <Text style={styles.propertyDetailText}>
+                          {property.area > 0 ? `${property.area} m²` : 'N/A'}
+                        </Text>
+                      </View>
+                    </View>
+                    {property.type && (
+                      <View style={styles.propertyBadges}>
+                        <View style={styles.propertyBadge}>
+                          <Text style={styles.propertyBadgeText}>{property.type}</Text>
+                        </View>
+                        {property.status && (
+                          <View style={[styles.propertyBadge, styles.propertyBadgeStatus]}>
+                            <Text style={styles.propertyBadgeText}>{property.status}</Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                ))}
               </View>
             )}
-          </View>
+          </>
         )}
 
         {/* Quick Actions */}
@@ -246,5 +308,71 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1e293b',
+  },
+  propertyCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  propertyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  propertyName: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginRight: 12,
+  },
+  propertyPrice: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2563eb',
+  },
+  propertyDetails: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 8,
+  },
+  propertyDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  propertyDetailIcon: {
+    fontSize: 14,
+    marginRight: 6,
+  },
+  propertyDetailText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#64748b',
+  },
+  propertyBadges: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  propertyBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#f1f5f9',
+  },
+  propertyBadgeStatus: {
+    backgroundColor: '#d1fae5',
+  },
+  propertyBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748b',
   },
 });
