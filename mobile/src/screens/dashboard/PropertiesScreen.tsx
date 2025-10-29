@@ -11,6 +11,7 @@ import {
   Alert,
   Dimensions,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -281,74 +282,156 @@ export default function PropertiesScreen() {
     const hasSelections = selectedIds.size > 0;
 
     const handleCardPress = () => {
-      console.log('🔵 Card pressed:', item.id, 'Has selections:', hasSelections);
       if (hasSelections) {
         // If in selection mode, toggle selection
-        console.log('🔵 Toggling selection');
         toggleSelection(item.id);
       } else {
-        // Otherwise navigate to detail
-        console.log('🔵 Navigating to PropertyDetail');
+        // Navigate to detail screen
         navigation.navigate('PropertyDetail', { propertyId: item.id });
       }
     };
 
+    const handleCardLongPress = () => {
+      toggleSelection(item.id);
+    };
+
+    // Enhanced property data processing
+    const propertyTitle = item.property_name || item.title || item.description || 'No Name';
+    const propertyPrice = formatPrice(item.sale_price || item.rental_price_monthly || 0, item.status?.name);
+    const propertyType = item.type?.name || 'Unknown';
+    const propertyStatus = item.status?.name || 'Unknown';
+    const propertyRegion = item.region?.display_name || item.region?.name || 'Unknown';
+    const propertyCompound = item.compound?.name || '';
+    const propertyAddress = item.address || '';
+    const propertyDistrict = item.district?.name || '';
+    const propertyBedrooms = item.bedrooms_count || 0;
+    const propertyBathrooms = item.bathrooms_count || 0;
+    const propertyTotalArea = item.total_area || 0;
+    const propertyBuiltArea = item.built_area || 0;
+    const propertyLandArea = item.land_area || 0;
+
+    // Get first property image or use placeholder
+    const propertyImage = item.images && item.images[0] ? item.images[0].image_url : null;
+
     return (
       <TouchableOpacity
-        style={[styles.propertyCard, isSelected && styles.propertyCardSelected]}
+        style={[
+          styles.propertyCard,
+          isSelected && styles.propertyCardSelected,
+        ]}
         onPress={handleCardPress}
-        onLongPress={() => toggleSelection(item.id)}
+        onLongPress={handleCardLongPress}
         activeOpacity={0.7}
       >
-        <View style={styles.cardHeader}>
-          <View style={styles.checkbox}>
-            {isSelected && <Text style={styles.checkmark}>✓</Text>}
-          </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.propertyTitle} numberOfLines={2}>
-              {item.property_name || item.title || item.description || 'No Name'}
+        {/* Property Image */}
+        <View style={styles.imageContainer}>
+          {propertyImage ? (
+            <Image source={{ uri: propertyImage }} style={styles.propertyImage} resizeMode="cover" />
+          ) : (
+            <View style={styles.placeholderImage}>
+              <Text style={styles.placeholderIcon}>🏠</Text>
+            </View>
+          )}
+          
+          {/* Status Badge Overlay */}
+          <View style={[
+            styles.statusOverlay,
+            item.is_active && item.is_available ? styles.statusOverlayActive : styles.statusOverlayInactive
+          ]}>
+            <Text style={styles.statusOverlayText}>
+              {item.is_active && item.is_available ? 'Active' : 'Inactive'}
             </Text>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>
-                {item.is_active && item.is_available ? '🌐' : '🔒'}
+          </View>
+
+          {/* Selection Checkbox Overlay */}
+          {hasSelections && (
+            <View style={styles.checkboxOverlay}>
+              <View style={[
+                styles.checkbox,
+                isSelected && styles.checkboxSelected
+              ]}>
+                {isSelected && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* Card Content */}
+        <View style={styles.cardContent}>
+          {/* Title & Price */}
+          <View style={styles.cardTitleSection}>
+            <Text style={styles.propertyTitle} numberOfLines={2}>
+              {propertyTitle}
+            </Text>
+            <Text style={styles.propertyPrice}>
+              {propertyPrice}
+            </Text>
+          </View>
+
+          {/* Location */}
+          {(propertyCompound || propertyAddress || propertyRegion !== 'Unknown') && (
+            <View style={styles.locationRow}>
+              <Text style={styles.locationIcon}>📍</Text>
+              <Text style={styles.propertyLocation} numberOfLines={1}>
+                {propertyCompound || propertyAddress || propertyRegion}
+                {propertyDistrict && `, ${propertyDistrict}`}
               </Text>
             </View>
-          </View>
-        </View>
+          )}
 
-        <View style={styles.propertyDetails}>
-          <View style={styles.priceAreaRow}>
-            <Text style={styles.propertyPrice}>
-              {formatPrice(item.sale_price || item.rental_price_monthly || 0, item.status?.name)}
-            </Text>
-            {item.total_area && (
-              <Text style={styles.propertyArea}>📐 {item.total_area} m²</Text>
-            )}
-          </View>
-          <View style={styles.badges}>
-            {item.type?.name && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{item.type.name}</Text>
+          {/* Property Features */}
+          <View style={styles.featuresContainer}>
+            {propertyBedrooms > 0 && (
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>🛏️</Text>
+                <Text style={styles.featureText}>{propertyBedrooms}</Text>
               </View>
             )}
-            {item.status?.name && (
-              <View style={[styles.badge, styles.categoryBadge]}>
-                <Text style={styles.badgeText}>{item.status.name}</Text>
+            {propertyBathrooms > 0 && (
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>🚿</Text>
+                <Text style={styles.featureText}>{propertyBathrooms}</Text>
+              </View>
+            )}
+            {propertyTotalArea > 0 && (
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>�</Text>
+                <Text style={styles.featureText}>{propertyTotalArea}m²</Text>
+              </View>
+            )}
+            {item.parking_spots_count && item.parking_spots_count > 0 && (
+              <View style={styles.featureItem}>
+                <Text style={styles.featureIcon}>🚗</Text>
+                <Text style={styles.featureText}>{item.parking_spots_count}</Text>
               </View>
             )}
           </View>
-        </View>
 
-        {(item.address || item.region) && (
-          <View style={styles.locationRow}>
-            <Text style={styles.propertyLocation}>
-              📍 {item.address || item.region?.display_name || item.region?.name || 'No location'}
-            </Text>
-            {item.district?.name && (
-              <Text style={styles.propertyRegion}>{item.district.name}</Text>
+          {/* Badges Row */}
+          <View style={styles.badgesRow}>
+            {propertyType !== 'Unknown' && (
+              <View style={[styles.badge, styles.typeBadge]}>
+                <Text style={styles.badgeText}>{propertyType}</Text>
+              </View>
+            )}
+            {propertyStatus !== 'Unknown' && (
+              <View style={[styles.badge, styles.statusBadgeChip]}>
+                <Text style={styles.badgeText}>{propertyStatus}</Text>
+              </View>
             )}
           </View>
-        )}
+
+          {/* View Details Button */}
+          {!hasSelections && (
+            <TouchableOpacity 
+              style={styles.viewDetailsButton}
+              onPress={handleCardPress}
+            >
+              <Text style={styles.viewDetailsText}>View Details</Text>
+              <Text style={styles.viewDetailsArrow}>→</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </TouchableOpacity>
     );
   };
@@ -553,12 +636,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-  },
   screenTitle: {
     fontSize: theme.typography.fontSize['3xl'],
     fontWeight: theme.typography.fontWeight.bold,
@@ -605,13 +682,15 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     fontWeight: theme.typography.fontWeight.medium,
   },
+  
+  // Modern Card Styles
   propertyCard: {
     backgroundColor: theme.colors.white,
     marginHorizontal: isDesktop ? 0 : theme.spacing.lg,
     marginTop: theme.spacing.md,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    ...theme.shadows.base,
+    borderRadius: theme.borderRadius.xl,
+    overflow: 'hidden',
+    ...theme.shadows.md,
     borderWidth: 2,
     borderColor: 'transparent',
     flex: isDesktop ? 1 : undefined,
@@ -619,117 +698,185 @@ const styles = StyleSheet.create({
   },
   propertyCardSelected: {
     borderColor: theme.colors.primary,
-    backgroundColor: '#eff6ff',
+    ...theme.shadows.lg,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: theme.spacing.sm,
+  
+  // Image Container
+  imageContainer: {
+    width: '100%',
+    height: 200,
+    position: 'relative',
+    backgroundColor: theme.colors.border,
   },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
+  propertyImage: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: theme.colors.secondary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: theme.spacing.md,
   },
-  checkmark: {
-    color: theme.colors.primary,
-    fontSize: 16,
+  placeholderIcon: {
+    fontSize: 64,
+  },
+  
+  // Status Overlay
+  statusOverlay: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: theme.borderRadius.full,
+    ...theme.shadows.sm,
+  },
+  statusOverlayActive: {
+    backgroundColor: '#10b981',
+  },
+  statusOverlayInactive: {
+    backgroundColor: '#ef4444',
+  },
+  statusOverlayText: {
+    color: '#ffffff',
+    fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.bold,
   },
-  headerInfo: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+  
+  // Checkbox Overlay
+  checkboxOverlay: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
   },
-  statusBadge: {
-    width: 24,
-    height: 24,
+  checkbox: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
+    ...theme.shadows.sm,
   },
-  statusText: {
-    fontSize: 16,
+  checkboxSelected: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  checkmark: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+  
+  // Card Content
+  cardContent: {
+    padding: theme.spacing.lg,
+  },
+  cardTitleSection: {
+    marginBottom: theme.spacing.sm,
   },
   propertyTitle: {
-    flex: 1,
     fontSize: theme.typography.fontSize.lg,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textPrimary,
-    marginRight: theme.spacing.sm,
-  },
-  propertySubtitle: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.textTertiary,
-    marginBottom: theme.spacing.sm,
-    fontStyle: 'italic',
-  },
-  propertyDescription: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.md,
-    lineHeight: 20,
-  },
-  propertyDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
+    marginBottom: 6,
+    lineHeight: 24,
   },
   propertyPrice: {
     fontSize: theme.typography.fontSize.xl,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.primary,
   },
-  priceAreaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.xs,
-  },
-  propertyArea: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.textSecondary,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
-  badges: {
-    flexDirection: 'row',
-    gap: theme.spacing.xs,
-  },
-  badge: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 2,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: theme.colors.background,
-  },
-  categoryBadge: {
-    backgroundColor: '#d1fae5',
-  },
-  badgeText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.textSecondary,
-    fontWeight: theme.typography.fontWeight.medium,
-  },
+  
+  // Location
   locationRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+    gap: 6,
+  },
+  locationIcon: {
+    fontSize: 14,
   },
   propertyLocation: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.textSecondary,
     flex: 1,
   },
-  propertyRegion: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.textTertiary,
+  
+  // Features
+  featuresContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  featureIcon: {
+    fontSize: 16,
+  },
+  featureText: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.textSecondary,
     fontWeight: theme.typography.fontWeight.medium,
   },
+  
+  // Badges
+  badgesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
+  },
+  badge: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.borderRadius.sm,
+  },
+  typeBadge: {
+    backgroundColor: '#dbeafe',
+  },
+  statusBadgeChip: {
+    backgroundColor: '#fef3c7',
+  },
+  badgeText: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.textPrimary,
+    fontWeight: theme.typography.fontWeight.semibold,
+  },
+  
+  // View Details Button
+  viewDetailsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.lg,
+    marginTop: theme.spacing.xs,
+  },
+  viewDetailsText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: '#ffffff',
+    marginRight: 6,
+  },
+  viewDetailsArrow: {
+    fontSize: theme.typography.fontSize.base,
+    color: '#ffffff',
+    fontWeight: theme.typography.fontWeight.bold,
+  },
+  
   bulkActionsBar: {
     position: 'absolute',
     bottom: 0,
@@ -852,5 +999,11 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.textTertiary,
     fontWeight: theme.typography.fontWeight.medium,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.md,
   },
 });

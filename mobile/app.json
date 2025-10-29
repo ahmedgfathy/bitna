@@ -33,7 +33,7 @@
       "themeColor": "#1877f2",
       "backgroundColor": "#ffffff",
       "bundler": "metro",
-      "output": "static",
+      "output": "single",
       "build": {
         "babel": {
           "include": []

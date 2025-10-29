@@ -63,6 +63,7 @@ export interface Property {
   // Floors & Parking
   total_floors_in_building?: number;
   parking_spaces?: number;
+  parking_spots_count?: number;
   
   // Status & Condition
   furnishing_status_id?: string;

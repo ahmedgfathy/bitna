@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "bitna-crm": {
+      "command": "/opt/homebrew/bin/node",
+      "args": [
+        "/Users/ahmedgomaa/bitna/mcp-server/dist/index.js"
+      ],
+      "env": {
+        "DATABASE_URL": "mysql://root:zerocall@localhost:3306/bitna",
+        "MCP_API_KEY": "bitna-mcp-api-key-2024",
+        "JWT_SECRET": "bitna-jwt-secret-2024",
+        "NODE_ENV": "development"
+      }
+    }
+  }
+}

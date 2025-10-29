@@ -167,6 +167,113 @@ router.get('/public', async (req, res) => {
 });
 
 /**
+ * GET /api/properties/:id
+ * Get a single property by ID (tenant-scoped)
+ */
+router.get('/:id', tenantIsolation, async (req, res) => {
+  try {
+    const propertyId = req.params.id;
+
+    if (!propertyId) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Property ID is required',
+      });
+      return;
+    }
+
+    const property = await db.getPropertyById(propertyId, req.tenantId!);
+
+    if (!property) {
+      res.status(404).json({
+        status: 'error',
+        message: 'Property not found',
+      });
+      return;
+    }
+
+    res.json({
+      status: 'success',
+      data: property,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Failed to fetch property',
+    });
+  }
+});
+
+/**
+ * PUT /api/properties/:id
+ * Update a property (tenant-scoped)
+ */
+router.put('/:id', tenantIsolation, async (req, res) => {
+  try {
+    const propertyId = req.params.id;
+
+    if (!propertyId) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Property ID is required',
+      });
+      return;
+    }
+
+    const property = await db.updateProperty(propertyId, req.tenantId!, req.body);
+
+    if (!property) {
+      res.status(404).json({
+        status: 'error',
+        message: 'Property not found',
+      });
+      return;
+    }
+
+    res.json({
+      status: 'success',
+      data: property,
+      message: 'Property updated successfully',
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Failed to update property',
+    });
+  }
+});
+
+/**
+ * DELETE /api/properties/:id
+ * Delete a property (tenant-scoped, soft delete)
+ */
+router.delete('/:id', tenantIsolation, async (req, res) => {
+  try {
+    const propertyId = req.params.id;
+
+    if (!propertyId) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Property ID is required',
+      });
+      return;
+    }
+
+    await db.deleteProperty(propertyId, req.tenantId!);
+
+    res.json({
+      status: 'success',
+      message: 'Property deleted successfully',
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: error instanceof Error ? error.message : 'Failed to delete property',
+    });
+  }
+});
+
+/**
  * GET /api/properties/nearby
  * Get properties near a location (no authentication required)
  */

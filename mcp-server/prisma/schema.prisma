@@ -1,0 +1,1003 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id                      String                    @id @default(uuid())
+  name                    String
+  type                    TenantType
+  mobile                  String                    @unique
+  subscriptionStatus      SubscriptionStatus        @default(TRIAL)
+  subscriptionStart       DateTime?
+  subscriptionEnd         DateTime?
+  isActive                Boolean                   @default(true)
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  address                 String?
+  city                    String?
+  companyName             String?
+  country                 String?                   @default("Egypt")
+  description             String?                   @db.Text
+  email                   String?
+  logoUrl                 String?
+  phone                   String?
+  region                  String?
+  website                 String?
+  activities              Activity[]
+  amenities               amenities[]
+  compounds               compounds[]
+  construction_statuses   construction_statuses[]
+  districts               districts[]
+  features                features[]
+  finishing_statuses      finishing_statuses[]
+  furnishing_statuses     furnishing_statuses[]
+  leads                   Lead[]
+  listing_purposes        listing_purposes[]
+  neighborhoods           neighborhoods[]
+  orientations            orientations[]
+  ownership_statuses      ownership_statuses[]
+  priority_levels         priority_levels[]
+  properties              Property[]
+  property_activities     property_activities[]
+  property_advertisements property_advertisements[]
+  property_audit_logs     property_audit_logs[]
+  property_call_logs      property_call_logs[]
+  property_categories     property_categories[]
+  property_conditions     property_conditions[]
+  property_statuses       property_statuses[]
+  property_sub_categories property_sub_categories[]
+  property_types          PropertyType[]
+  regions                 Region[]
+  users                   User[]
+  view_types              view_types[]
+
+  @@index([mobile])
+  @@index([subscriptionStatus])
+  @@map("tenants")
+}
+
+model User {
+  id                                                   String                    @id @default(uuid())
+  name                                                 String
+  mobile                                               String                    @unique
+  role                                                 UserRole                  @default(EMPLOYEE)
+  tenantId                                             String
+  isActive                                             Boolean                   @default(true)
+  lastLogin                                            DateTime?
+  createdAt                                            DateTime                  @default(now())
+  updatedAt                                            DateTime                  @updatedAt
+  email                                                String?
+  pinResetRequired                                     Boolean                   @default(false)
+  status                                               UserStatus                @default(ACTIVE)
+  temporaryPin                                         String?
+  assignedActivities                                   Activity[]                @relation("ActivityAssignee")
+  createdActivities                                    Activity[]                @relation("ActivityCreator")
+  assignedLeads                                        Lead[]                    @relation("LeadAssignee")
+  properties_properties_assigned_handler_idTousers     Property[]                @relation("properties_assigned_handler_idTousers")
+  properties_properties_created_by_idTousers           Property[]                @relation("properties_created_by_idTousers")
+  properties_properties_property_manager_idTousers     Property[]                @relation("properties_property_manager_idTousers")
+  properties_properties_sales_representative_idTousers Property[]                @relation("properties_sales_representative_idTousers")
+  properties_properties_updated_by_idTousers           Property[]                @relation("properties_updated_by_idTousers")
+  property_activities                                  property_activities[]
+  property_advertisements                              property_advertisements[]
+  property_audit_logs                                  property_audit_logs[]
+  property_call_logs                                   property_call_logs[]
+  property_documents                                   property_documents[]
+  property_images                                      property_images[]
+  tenant                                               Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([mobile])
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+model Property {
+  id                                              String                    @id @default(uuid())
+  property_number                                 String                    @unique @db.VarChar(100)
+  property_name                                   String?                   @db.VarChar(255)
+  company_id                                      String
+  created_by_id                                   String
+  updated_by_id                                   String?
+  category_id                                     String?
+  type_id                                         String?
+  sub_category_id                                 String?
+  status_id                                       String?
+  furnishing_status_id                            String?
+  construction_status_id                          String?
+  finishing_status_id                             String?
+  condition_id                                    String?
+  ownership_status_id                             String?
+  region_id                                       String?
+  district_id                                     String?
+  neighborhood_id                                 String?
+  compound_id                                     String?
+  building_name                                   String?                   @db.VarChar(255)
+  unit_number                                     String?                   @db.VarChar(100)
+  floor_number                                    String?                   @db.VarChar(255)
+  address                                         String?                   @db.Text
+  street_address                                  String?                   @db.VarChar(255)
+  postal_code                                     String?                   @db.VarChar(50)
+  gps_latitude                                    Decimal?                  @db.Decimal(10, 8)
+  gps_longitude                                   Decimal?                  @db.Decimal(11, 8)
+  total_area                                      Decimal?                  @db.Decimal(12, 2)
+  built_area                                      Decimal?                  @db.Decimal(12, 2)
+  usable_area                                     Decimal?                  @db.Decimal(12, 2)
+  land_area                                       Decimal?                  @db.Decimal(12, 2)
+  balcony_area                                    Decimal?                  @db.Decimal(12, 2)
+  garden_area                                     Decimal?                  @db.Decimal(12, 2)
+  rooms_count                                     Int?
+  bedrooms_count                                  Int?
+  bathrooms_count                                 Int?
+  living_rooms_count                              Int?
+  kitchens_count                                  Int?                      @default(1)
+  parking_spots_count                             Int?
+  total_floors_in_building                        Int?
+  built_year                                      Int?
+  property_age                                    Int?
+  last_renovation_year                            Int?
+  sale_price                                      Decimal?                  @db.Decimal(15, 2)
+  rental_price_monthly                            Decimal?                  @db.Decimal(15, 2)
+  rental_price_yearly                             Decimal?                  @db.Decimal(15, 2)
+  price_per_sqm                                   Decimal?                  @db.Decimal(15, 2)
+  deposit_amount                                  Decimal?                  @db.Decimal(15, 2)
+  service_charges                                 Decimal?                  @db.Decimal(12, 2)
+  maintenance_fee                                 Decimal?                  @db.Decimal(12, 2)
+  property_taxes                                  Decimal?                  @db.Decimal(12, 2)
+  currency_id                                     String?
+  installment_available                           Boolean?                  @default(false)
+  down_payment                                    Decimal?                  @db.Decimal(15, 2)
+  installment_amount                              Decimal?                  @db.Decimal(15, 2)
+  payment_frequency                               String?                   @db.VarChar(50)
+  installment_period_months                       Int?
+  has_elevator                                    Boolean?                  @default(false)
+  has_garden                                      Boolean?                  @default(false)
+  has_garage                                      Boolean?                  @default(false)
+  has_swimming_pool                               Boolean?                  @default(false)
+  has_gym                                         Boolean?                  @default(false)
+  has_security                                    Boolean?                  @default(false)
+  has_electricity                                 Boolean?                  @default(true)
+  has_water                                       Boolean?                  @default(true)
+  has_gas                                         Boolean?                  @default(false)
+  has_internet                                    Boolean?                  @default(false)
+  has_landline                                    Boolean?                  @default(false)
+  has_satellite_tv                                Boolean?                  @default(false)
+  has_air_conditioning                            Boolean?                  @default(false)
+  has_heating                                     Boolean?                  @default(false)
+  has_balcony                                     Boolean?                  @default(false)
+  has_terrace                                     Boolean?                  @default(false)
+  has_storage                                     Boolean?                  @default(false)
+  view_type_id                                    String?
+  orientation_id                                  String?
+  is_corner_unit                                  Boolean?                  @default(false)
+  is_penthouse                                    Boolean?                  @default(false)
+  is_duplex                                       Boolean?                  @default(false)
+  is_furnished                                    Boolean?                  @default(false)
+  pet_friendly                                    Boolean?                  @default(false)
+  smoking_allowed                                 Boolean?                  @default(false)
+  title_deed_number                               String?                   @db.VarChar(255)
+  registration_number                             String?                   @db.VarChar(255)
+  property_tax_id                                 String?                   @db.VarChar(255)
+  has_legal_issues                                Boolean?                  @default(false)
+  legal_notes                                     String?                   @db.Text
+  owner_name                                      String?                   @db.VarChar(255)
+  owner_mobile                                    String?                   @db.VarChar(50)
+  owner_telephone                                 String?                   @db.VarChar(50)
+  owner_email                                     String?                   @db.VarChar(255)
+  owner_type                                      String?                   @db.VarChar(100)
+  assigned_handler_id                             String?
+  sales_representative_id                         String?
+  property_manager_id                             String?
+  emergency_contact                               String?                   @db.VarChar(255)
+  maintenance_contact                             String?                   @db.VarChar(255)
+  title                                           String?                   @db.VarChar(500)
+  description                                     String?                   @db.Text
+  short_description                               String?                   @db.Text
+  special_instructions                            String?                   @db.Text
+  internal_notes                                  String?                   @db.Text
+  virtual_tour_url                                String?                   @db.Text
+  video_url                                       String?                   @db.Text
+  brochure_url                                    String?                   @db.Text
+  is_featured                                     Boolean?                  @default(false)
+  is_hot_deal                                     Boolean?                  @default(false)
+  is_new_listing                                  Boolean?                  @default(true)
+  is_exclusive                                    Boolean?                  @default(false)
+  show_on_website                                 Boolean?                  @default(true)
+  show_on_social_media                            Boolean?                  @default(false)
+  listing_purpose_id                              String?
+  priority_level_id                               String?
+  listing_date                                    DateTime?                 @db.Date
+  expiry_date                                     DateTime?                 @db.Date
+  available_from                                  DateTime?                 @db.Date
+  last_contact_date                               DateTime?                 @db.Date
+  next_follow_up_date                             DateTime?                 @db.Date
+  last_viewed_at                                  DateTime?
+  view_count                                      Int?                      @default(0)
+  inquiry_count                                   Int?                      @default(0)
+  is_verified                                     Boolean?                  @default(false)
+  is_published                                    Boolean?                  @default(false)
+  is_archived                                     Boolean?                  @default(false)
+  is_deleted                                      Boolean?                  @default(false)
+  created_at                                      DateTime                  @default(now())
+  updated_at                                      DateTime
+  published_at                                    DateTime?
+  sold_at                                         DateTime?
+  rented_at                                       DateTime?
+  custom_fields                                   String?                   @db.LongText
+  metadata                                        String?                   @db.LongText
+  users_properties_assigned_handler_idTousers     User?                     @relation("properties_assigned_handler_idTousers", fields: [assigned_handler_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_assigned_handler")
+  property_categories                             property_categories?      @relation(fields: [category_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_category")
+  tenants                                         Tenant                    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_properties_company")
+  compounds                                       compounds?                @relation(fields: [compound_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_compound")
+  property_conditions                             property_conditions?      @relation(fields: [condition_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_condition")
+  construction_statuses                           construction_statuses?    @relation(fields: [construction_status_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_construction_status")
+  users_properties_created_by_idTousers           User                      @relation("properties_created_by_idTousers", fields: [created_by_id], references: [id], onUpdate: Restrict, map: "fk_properties_created_by")
+  currencies                                      currencies?               @relation(fields: [currency_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_currency")
+  districts                                       districts?                @relation(fields: [district_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_district")
+  finishing_statuses                              finishing_statuses?       @relation(fields: [finishing_status_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_finishing_status")
+  furnishing_statuses                             furnishing_statuses?      @relation(fields: [furnishing_status_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_furnishing_status")
+  listing_purposes                                listing_purposes?         @relation(fields: [listing_purpose_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_listing_purpose")
+  neighborhoods                                   neighborhoods?            @relation(fields: [neighborhood_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_neighborhood")
+  orientations                                    orientations?             @relation(fields: [orientation_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_orientation")
+  ownership_statuses                              ownership_statuses?       @relation(fields: [ownership_status_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_ownership_status")
+  priority_levels                                 priority_levels?          @relation(fields: [priority_level_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_priority_level")
+  users_properties_property_manager_idTousers     User?                     @relation("properties_property_manager_idTousers", fields: [property_manager_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_property_manager")
+  regions                                         Region?                   @relation(fields: [region_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_region")
+  users_properties_sales_representative_idTousers User?                     @relation("properties_sales_representative_idTousers", fields: [sales_representative_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_sales_rep")
+  property_statuses                               property_statuses?        @relation(fields: [status_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_status")
+  property_sub_categories                         property_sub_categories?  @relation(fields: [sub_category_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_sub_category")
+  property_types                                  PropertyType?             @relation(fields: [type_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_type")
+  users_properties_updated_by_idTousers           User?                     @relation("properties_updated_by_idTousers", fields: [updated_by_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_updated_by")
+  view_types                                      view_types?               @relation(fields: [view_type_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_properties_view_type")
+  property_activities                             property_activities[]
+  property_advertisements                         property_advertisements[]
+  property_amenities                              property_amenities[]
+  property_audit_logs                             property_audit_logs[]
+  property_call_logs                              property_call_logs[]
+  property_distances                              property_distances[]
+  property_documents                              property_documents[]
+  property_features                               property_features[]
+  property_images                                 property_images[]
+  property_utilities                              property_utilities[]
+
+  @@index([condition_id], map: "fk_properties_condition")
+  @@index([construction_status_id], map: "fk_properties_construction_status")
+  @@index([currency_id], map: "fk_properties_currency")
+  @@index([finishing_status_id], map: "fk_properties_finishing_status")
+  @@index([furnishing_status_id], map: "fk_properties_furnishing_status")
+  @@index([listing_purpose_id], map: "fk_properties_listing_purpose")
+  @@index([neighborhood_id], map: "fk_properties_neighborhood")
+  @@index([orientation_id], map: "fk_properties_orientation")
+  @@index([ownership_status_id], map: "fk_properties_ownership_status")
+  @@index([priority_level_id], map: "fk_properties_priority_level")
+  @@index([property_manager_id], map: "fk_properties_property_manager")
+  @@index([sub_category_id], map: "fk_properties_sub_category")
+  @@index([updated_by_id], map: "fk_properties_updated_by")
+  @@index([view_type_id], map: "fk_properties_view_type")
+  @@index([assigned_handler_id], map: "idx_properties_assigned_handler")
+  @@index([category_id], map: "idx_properties_category")
+  @@index([company_id], map: "idx_properties_company")
+  @@index([compound_id], map: "idx_properties_compound")
+  @@index([created_at], map: "idx_properties_created_at")
+  @@index([created_by_id], map: "idx_properties_created_by")
+  @@index([is_deleted], map: "idx_properties_deleted")
+  @@index([district_id], map: "idx_properties_district")
+  @@index([is_featured], map: "idx_properties_featured")
+  @@index([listing_date], map: "idx_properties_listing_date")
+  @@index([sale_price, rental_price_monthly], map: "idx_properties_price_range")
+  @@index([is_published], map: "idx_properties_published")
+  @@index([region_id], map: "idx_properties_region")
+  @@index([sales_representative_id], map: "idx_properties_sales_rep")
+  @@index([status_id], map: "idx_properties_status")
+  @@index([type_id], map: "idx_properties_type")
+  @@map("properties")
+}
+
+model Lead {
+  id           String     @id @default(uuid())
+  name         String
+  mobile       String
+  email        String?
+  source       LeadSource @default(OTHER)
+  status       LeadStatus @default(NEW)
+  notes        String?    @db.Text
+  tenantId     String
+  assignedToId String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  assignedTo   User?      @relation("LeadAssignee", fields: [assignedToId], references: [id])
+  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([assignedToId])
+  @@map("leads")
+}
+
+model PropertyType {
+  id                      String                    @id @default(uuid())
+  company_id              String?
+  category_id             String?
+  name                    String                    @db.VarChar(100)
+  display_name            String?                   @db.VarChar(100)
+  description             String?                   @db.Text
+  icon                    String?                   @db.VarChar(50)
+  color                   String?                   @db.VarChar(7)
+  is_active               Boolean?                  @default(true)
+  is_system               Boolean?                  @default(false)
+  sort_order              Int?                      @default(0)
+  created_at              DateTime                  @default(now())
+  updated_at              DateTime
+  properties              Property[]
+  property_sub_categories property_sub_categories[]
+  property_categories     property_categories?      @relation(fields: [category_id], references: [id], onUpdate: Restrict, map: "fk_property_types_category")
+  tenants                 Tenant?                   @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_types_company")
+
+  @@index([is_active], map: "idx_property_types_active")
+  @@index([category_id], map: "idx_property_types_category")
+  @@index([company_id], map: "idx_property_types_company")
+  @@map("property_types")
+}
+
+model Region {
+  id           String      @id @default(uuid())
+  company_id   String
+  name         String      @db.VarChar(255)
+  display_name String?     @db.VarChar(255)
+  description  String?     @db.Text
+  is_active    Boolean?    @default(true)
+  sort_order   Int?        @default(0)
+  created_at   DateTime    @default(now())
+  updated_at   DateTime
+  districts    districts[]
+  properties   Property[]
+  tenants      Tenant      @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_regions_company")
+
+  @@index([is_active], map: "idx_regions_active")
+  @@index([company_id], map: "idx_regions_company")
+  @@map("regions")
+}
+
+model Activity {
+  id           String           @id @default(uuid())
+  type         ActivityType
+  title        String
+  description  String?          @db.Text
+  status       ActivityStatus   @default(PENDING)
+  priority     ActivityPriority @default(MEDIUM)
+  dateTime     DateTime?
+  reminderTime DateTime?
+  linkedType   LinkedEntityType
+  linkedId     String
+  tenantId     String
+  assignedToId String?
+  createdById  String
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  assignedTo   User?            @relation("ActivityAssignee", fields: [assignedToId], references: [id])
+  createdBy    User             @relation("ActivityCreator", fields: [createdById], references: [id])
+  tenant       Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([linkedType, linkedId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([dateTime])
+  @@index([createdById], map: "activities_createdById_fkey")
+  @@map("activities")
+}
+
+model amenities {
+  id                 String               @id
+  company_id         String?
+  name               String               @db.VarChar(100)
+  display_name       String?              @db.VarChar(100)
+  icon               String?              @db.VarChar(50)
+  category           String?              @db.VarChar(100)
+  description        String?              @db.Text
+  is_active          Boolean?             @default(true)
+  sort_order         Int?                 @default(0)
+  created_at         DateTime             @default(now())
+  updated_at         DateTime
+  tenants            Tenant?              @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_amenities_company")
+  property_amenities property_amenities[]
+
+  @@index([category], map: "idx_amenities_category")
+  @@index([company_id], map: "idx_amenities_company")
+}
+
+model compounds {
+  id              String         @id
+  company_id      String
+  neighborhood_id String?
+  name            String         @db.VarChar(255)
+  display_name    String?        @db.VarChar(255)
+  description     String?        @db.Text
+  address         String?        @db.Text
+  gps_latitude    Decimal?       @db.Decimal(10, 8)
+  gps_longitude   Decimal?       @db.Decimal(11, 8)
+  is_active       Boolean?       @default(true)
+  sort_order      Int?           @default(0)
+  created_at      DateTime       @default(now())
+  updated_at      DateTime
+  tenants         Tenant         @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_compounds_company")
+  neighborhoods   neighborhoods? @relation(fields: [neighborhood_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_compounds_neighborhood")
+  properties      Property[]
+
+  @@index([is_active], map: "idx_compounds_active")
+  @@index([company_id], map: "idx_compounds_company")
+  @@index([neighborhood_id], map: "idx_compounds_neighborhood")
+}
+
+model construction_statuses {
+  id           String     @id
+  company_id   String?
+  name         String     @db.VarChar(100)
+  display_name String?    @db.VarChar(100)
+  description  String?    @db.Text
+  is_active    Boolean?   @default(true)
+  sort_order   Int?       @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime
+  tenants      Tenant?    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_construction_statuses_company")
+  properties   Property[]
+
+  @@index([company_id], map: "fk_construction_statuses_company")
+}
+
+model currencies {
+  id                      String                    @id
+  code                    String                    @unique(map: "code") @db.VarChar(10)
+  symbol                  String?                   @db.VarChar(10)
+  name                    String?                   @db.VarChar(100)
+  display_name            String?                   @db.VarChar(100)
+  is_active               Boolean?                  @default(true)
+  sort_order              Int?                      @default(0)
+  created_at              DateTime                  @default(now())
+  updated_at              DateTime
+  properties              Property[]
+  property_advertisements property_advertisements[]
+}
+
+model districts {
+  id            String          @id
+  company_id    String
+  region_id     String?
+  name          String          @db.VarChar(255)
+  display_name  String?         @db.VarChar(255)
+  description   String?         @db.Text
+  is_active     Boolean?        @default(true)
+  sort_order    Int?            @default(0)
+  created_at    DateTime        @default(now())
+  updated_at    DateTime
+  tenants       Tenant          @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_districts_company")
+  regions       Region?         @relation(fields: [region_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_districts_region")
+  neighborhoods neighborhoods[]
+  properties    Property[]
+
+  @@index([is_active], map: "idx_districts_active")
+  @@index([company_id], map: "idx_districts_company")
+  @@index([region_id], map: "idx_districts_region")
+}
+
+model features {
+  id                String              @id
+  company_id        String?
+  name              String              @db.VarChar(100)
+  display_name      String?             @db.VarChar(100)
+  icon              String?             @db.VarChar(50)
+  category          String?             @db.VarChar(100)
+  description       String?             @db.Text
+  is_active         Boolean?            @default(true)
+  sort_order        Int?                @default(0)
+  created_at        DateTime            @default(now())
+  updated_at        DateTime
+  tenants           Tenant?             @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_features_company")
+  property_features property_features[]
+
+  @@index([company_id], map: "idx_features_company")
+}
+
+model finishing_statuses {
+  id           String     @id
+  company_id   String?
+  name         String     @db.VarChar(100)
+  display_name String?    @db.VarChar(100)
+  description  String?    @db.Text
+  is_active    Boolean?   @default(true)
+  sort_order   Int?       @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime
+  tenants      Tenant?    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_finishing_statuses_company")
+  properties   Property[]
+
+  @@index([company_id], map: "fk_finishing_statuses_company")
+}
+
+model furnishing_statuses {
+  id           String     @id
+  company_id   String?
+  name         String     @db.VarChar(100)
+  display_name String?    @db.VarChar(100)
+  description  String?    @db.Text
+  is_active    Boolean?   @default(true)
+  sort_order   Int?       @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime
+  tenants      Tenant?    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_furnishing_statuses_company")
+  properties   Property[]
+
+  @@index([company_id], map: "fk_furnishing_statuses_company")
+}
+
+model listing_purposes {
+  id           String     @id
+  company_id   String?
+  name         String     @db.VarChar(100)
+  display_name String?    @db.VarChar(100)
+  description  String?    @db.Text
+  is_active    Boolean?   @default(true)
+  sort_order   Int?       @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime
+  tenants      Tenant?    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_listing_purposes_company")
+  properties   Property[]
+
+  @@index([company_id], map: "fk_listing_purposes_company")
+}
+
+model neighborhoods {
+  id           String      @id
+  company_id   String
+  district_id  String?
+  name         String      @db.VarChar(255)
+  display_name String?     @db.VarChar(255)
+  description  String?     @db.Text
+  is_active    Boolean?    @default(true)
+  sort_order   Int?        @default(0)
+  created_at   DateTime    @default(now())
+  updated_at   DateTime
+  compounds    compounds[]
+  tenants      Tenant      @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_neighborhoods_company")
+  districts    districts?  @relation(fields: [district_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_neighborhoods_district")
+  properties   Property[]
+
+  @@index([is_active], map: "idx_neighborhoods_active")
+  @@index([company_id], map: "idx_neighborhoods_company")
+  @@index([district_id], map: "idx_neighborhoods_district")
+}
+
+model orientations {
+  id           String     @id
+  company_id   String?
+  name         String     @db.VarChar(100)
+  display_name String?    @db.VarChar(100)
+  description  String?    @db.Text
+  is_active    Boolean?   @default(true)
+  sort_order   Int?       @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime
+  tenants      Tenant?    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_orientations_company")
+  properties   Property[]
+
+  @@index([company_id], map: "fk_orientations_company")
+}
+
+model ownership_statuses {
+  id           String     @id
+  company_id   String?
+  name         String     @db.VarChar(100)
+  display_name String?    @db.VarChar(100)
+  description  String?    @db.Text
+  is_active    Boolean?   @default(true)
+  sort_order   Int?       @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime
+  tenants      Tenant?    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_ownership_statuses_company")
+  properties   Property[]
+
+  @@index([company_id], map: "fk_ownership_statuses_company")
+}
+
+model priority_levels {
+  id           String     @id
+  company_id   String?
+  name         String     @db.VarChar(100)
+  display_name String?    @db.VarChar(100)
+  level        Int
+  color        String?    @db.VarChar(7)
+  description  String?    @db.Text
+  is_active    Boolean?   @default(true)
+  sort_order   Int?       @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime
+  tenants      Tenant?    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_priority_levels_company")
+  properties   Property[]
+
+  @@index([company_id], map: "fk_priority_levels_company")
+}
+
+model property_activities {
+  id            String    @id
+  property_id   String
+  company_id    String
+  user_id       String?
+  activity_type String    @db.VarChar(50)
+  title         String?   @db.VarChar(255)
+  description   String?   @db.Text
+  activity_date DateTime? @default(now())
+  notes         String?   @db.Text
+  metadata      String?   @db.LongText
+  created_at    DateTime  @default(now())
+  tenants       Tenant    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_activities_company")
+  properties    Property  @relation(fields: [property_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_activities_property")
+  users         User?     @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_property_activities_user")
+
+  @@index([company_id], map: "idx_property_activities_company")
+  @@index([activity_date], map: "idx_property_activities_date")
+  @@index([property_id], map: "idx_property_activities_property")
+  @@index([activity_type], map: "idx_property_activities_type")
+  @@index([user_id], map: "idx_property_activities_user")
+}
+
+model property_advertisements {
+  id             String      @id
+  property_id    String
+  company_id     String
+  platform       String?     @db.VarChar(100)
+  campaign_name  String?     @db.VarChar(255)
+  ad_url         String?     @db.Text
+  start_date     DateTime?   @db.Date
+  end_date       DateTime?   @db.Date
+  budget         Decimal?    @db.Decimal(12, 2)
+  currency_id    String?
+  impressions    Int?        @default(0)
+  clicks         Int?        @default(0)
+  inquiries      Int?        @default(0)
+  cost_per_click Decimal?    @db.Decimal(10, 2)
+  is_active      Boolean?    @default(true)
+  notes          String?     @db.Text
+  created_by_id  String?
+  created_at     DateTime    @default(now())
+  updated_at     DateTime
+  tenants        Tenant      @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_advertisements_company")
+  users          User?       @relation(fields: [created_by_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_property_advertisements_created_by")
+  currencies     currencies? @relation(fields: [currency_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_property_advertisements_currency")
+  properties     Property    @relation(fields: [property_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_advertisements_property")
+
+  @@index([created_by_id], map: "fk_property_advertisements_created_by")
+  @@index([currency_id], map: "fk_property_advertisements_currency")
+  @@index([is_active], map: "idx_property_advertisements_active")
+  @@index([company_id], map: "idx_property_advertisements_company")
+  @@index([platform], map: "idx_property_advertisements_platform")
+  @@index([property_id], map: "idx_property_advertisements_property")
+}
+
+model property_amenities {
+  id          String    @id
+  property_id String
+  amenity_id  String
+  notes       String?   @db.Text
+  created_at  DateTime  @default(now())
+  amenities   amenities @relation(fields: [amenity_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_amenities_amenity")
+  properties  Property  @relation(fields: [property_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_amenities_property")
+
+  @@unique([property_id, amenity_id], map: "property_amenities_property_amenity_key")
+  @@index([amenity_id], map: "idx_property_amenities_amenity")
+  @@index([property_id], map: "idx_property_amenities_property")
+}
+
+model property_audit_logs {
+  id             String    @id
+  property_id    String?
+  company_id     String
+  user_id        String?
+  action         String    @db.VarChar(50)
+  table_name     String?   @db.VarChar(100)
+  record_id      String?
+  old_values     String?   @db.LongText
+  new_values     String?   @db.LongText
+  changed_fields String?   @db.LongText
+  ip_address     String?   @db.VarChar(45)
+  user_agent     String?   @db.Text
+  notes          String?   @db.Text
+  created_at     DateTime  @default(now())
+  tenants        Tenant    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_audit_logs_company")
+  properties     Property? @relation(fields: [property_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_audit_logs_property")
+  users          User?     @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_property_audit_logs_user")
+
+  @@index([action], map: "idx_property_audit_logs_action")
+  @@index([company_id], map: "idx_property_audit_logs_company")
+  @@index([created_at], map: "idx_property_audit_logs_date")
+  @@index([property_id], map: "idx_property_audit_logs_property")
+  @@index([user_id], map: "idx_property_audit_logs_user")
+}
+
+model property_call_logs {
+  id                    String    @id
+  property_id           String
+  company_id            String
+  user_id               String?
+  contact_name          String?   @db.VarChar(255)
+  contact_phone         String?   @db.VarChar(50)
+  call_type             String?   @db.VarChar(50)
+  call_purpose          String?   @db.VarChar(100)
+  call_duration_seconds Int?
+  call_outcome          String?   @db.VarChar(100)
+  notes                 String?   @db.Text
+  next_follow_up_date   DateTime? @db.Date
+  call_date             DateTime? @default(now())
+  created_at            DateTime  @default(now())
+  tenants               Tenant    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_call_logs_company")
+  properties            Property  @relation(fields: [property_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_call_logs_property")
+  users                 User?     @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_property_call_logs_user")
+
+  @@index([company_id], map: "idx_property_call_logs_company")
+  @@index([call_date], map: "idx_property_call_logs_date")
+  @@index([property_id], map: "idx_property_call_logs_property")
+  @@index([user_id], map: "idx_property_call_logs_user")
+}
+
+model property_categories {
+  id             String         @id
+  company_id     String?
+  name           String         @db.VarChar(100)
+  display_name   String?        @db.VarChar(100)
+  description    String?        @db.Text
+  icon           String?        @db.VarChar(50)
+  color          String?        @db.VarChar(7)
+  is_active      Boolean?       @default(true)
+  is_system      Boolean?       @default(false)
+  sort_order     Int?           @default(0)
+  created_at     DateTime       @default(now())
+  updated_at     DateTime
+  properties     Property[]
+  tenants        Tenant?        @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_categories_company")
+  property_types PropertyType[]
+
+  @@index([is_active], map: "idx_property_categories_active")
+  @@index([company_id], map: "idx_property_categories_company")
+}
+
+model property_conditions {
+  id           String     @id
+  company_id   String?
+  name         String     @db.VarChar(100)
+  display_name String?    @db.VarChar(100)
+  description  String?    @db.Text
+  is_active    Boolean?   @default(true)
+  sort_order   Int?       @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime
+  properties   Property[]
+  tenants      Tenant?    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_conditions_company")
+
+  @@index([company_id], map: "fk_property_conditions_company")
+}
+
+model property_distances {
+  id                  String   @id
+  property_id         String
+  location_type       String   @db.VarChar(100)
+  location_name       String?  @db.VarChar(255)
+  distance_km         Decimal? @db.Decimal(8, 2)
+  travel_time_minutes Int?
+  transport_mode      String?  @db.VarChar(50)
+  notes               String?  @db.Text
+  created_at          DateTime @default(now())
+  updated_at          DateTime
+  properties          Property @relation(fields: [property_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_distances_property")
+
+  @@index([property_id], map: "idx_property_distances_property")
+  @@index([location_type], map: "idx_property_distances_type")
+}
+
+model property_documents {
+  id              String   @id
+  property_id     String
+  document_type   String   @db.VarChar(50)
+  title           String   @db.VarChar(255)
+  description     String?  @db.Text
+  file_url        String   @db.Text
+  file_name       String?  @db.VarChar(255)
+  file_size       Int?
+  file_format     String?  @db.VarChar(20)
+  is_confidential Boolean? @default(false)
+  uploaded_by_id  String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime
+  properties      Property @relation(fields: [property_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_documents_property")
+  users           User?    @relation(fields: [uploaded_by_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_property_documents_uploaded_by")
+
+  @@index([uploaded_by_id], map: "fk_property_documents_uploaded_by")
+  @@index([property_id], map: "idx_property_documents_property")
+  @@index([document_type], map: "idx_property_documents_type")
+}
+
+model property_features {
+  id          String   @id
+  property_id String
+  feature_id  String
+  value       String?  @db.Text
+  notes       String?  @db.Text
+  created_at  DateTime @default(now())
+  features    features @relation(fields: [feature_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_features_feature")
+  properties  Property @relation(fields: [property_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_features_property")
+
+  @@unique([property_id, feature_id], map: "property_features_property_feature_key")
+  @@index([feature_id], map: "idx_property_features_feature")
+  @@index([property_id], map: "idx_property_features_property")
+}
+
+model property_images {
+  id             String   @id
+  property_id    String
+  image_url      String   @db.Text
+  thumbnail_url  String?  @db.Text
+  title          String?  @db.VarChar(255)
+  caption        String?  @db.Text
+  alt_text       String?  @db.VarChar(255)
+  is_primary     Boolean? @default(false)
+  display_order  Int?     @default(0)
+  width          Int?
+  height         Int?
+  file_size      Int?
+  file_format    String?  @db.VarChar(20)
+  uploaded_by_id String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime
+  properties     Property @relation(fields: [property_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_images_property")
+  users          User?    @relation(fields: [uploaded_by_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_property_images_uploaded_by")
+
+  @@index([uploaded_by_id], map: "fk_property_images_uploaded_by")
+  @@index([display_order], map: "idx_property_images_order")
+  @@index([is_primary], map: "idx_property_images_primary")
+  @@index([property_id], map: "idx_property_images_property")
+}
+
+model property_statuses {
+  id           String     @id
+  company_id   String?
+  name         String     @db.VarChar(100)
+  display_name String?    @db.VarChar(100)
+  description  String?    @db.Text
+  color        String?    @default("#22c55e") @db.VarChar(7)
+  icon         String?    @db.VarChar(50)
+  is_active    Boolean?   @default(true)
+  is_system    Boolean?   @default(false)
+  sort_order   Int?       @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime
+  properties   Property[]
+  tenants      Tenant?    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_statuses_company")
+
+  @@index([is_active], map: "idx_property_statuses_active")
+  @@index([company_id], map: "idx_property_statuses_company")
+}
+
+model property_sub_categories {
+  id             String        @id
+  company_id     String?
+  type_id        String?
+  name           String        @db.VarChar(100)
+  display_name   String?       @db.VarChar(100)
+  description    String?       @db.Text
+  is_active      Boolean?      @default(true)
+  sort_order     Int?          @default(0)
+  created_at     DateTime      @default(now())
+  updated_at     DateTime
+  properties     Property[]
+  tenants        Tenant?       @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_sub_categories_company")
+  property_types PropertyType? @relation(fields: [type_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_sub_categories_type")
+
+  @@index([company_id], map: "fk_property_sub_categories_company")
+  @@index([type_id], map: "idx_property_sub_categories_type")
+}
+
+model property_utilities {
+  id              String    @id
+  property_id     String
+  utility_type    String    @db.VarChar(50)
+  is_connected    Boolean?  @default(false)
+  provider_name   String?   @db.VarChar(255)
+  account_number  String?   @db.VarChar(255)
+  monthly_fee     Decimal?  @db.Decimal(10, 2)
+  connection_date DateTime? @db.Date
+  notes           String?   @db.Text
+  created_at      DateTime  @default(now())
+  updated_at      DateTime
+  properties      Property  @relation(fields: [property_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_property_utilities_property")
+
+  @@index([property_id], map: "idx_property_utilities_property")
+  @@index([utility_type], map: "idx_property_utilities_type")
+}
+
+model view_types {
+  id           String     @id
+  company_id   String?
+  name         String     @db.VarChar(100)
+  display_name String?    @db.VarChar(100)
+  description  String?    @db.Text
+  is_active    Boolean?   @default(true)
+  sort_order   Int?       @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime
+  properties   Property[]
+  tenants      Tenant?    @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_view_types_company")
+
+  @@index([company_id], map: "fk_view_types_company")
+}
+
+enum TenantType {
+  FREELANCER
+  COMPANY
+}
+
+enum UserRole {
+  OWNER
+  MANAGER
+  SALES_AGENT
+  MARKETER
+  ADMIN_ASSISTANT
+  EMPLOYEE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+  TRIAL
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  NEGOTIATING
+  WON
+  LOST
+}
+
+enum LeadSource {
+  WEBSITE
+  REFERRAL
+  SOCIAL_MEDIA
+  DIRECT_CALL
+  WALK_IN
+  OTHER
+}
+
+enum ActivityType {
+  TASK
+  NOTE
+  MEETING
+}
+
+enum ActivityStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum ActivityPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum LinkedEntityType {
+  LEAD
+  PROPERTY
+}
