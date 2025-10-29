@@ -77,8 +77,9 @@ const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'
 
 export default function DashboardScreen() {
   const user = useAuthStore((state) => state.user);
-  const { t } = useLanguageStore();
+  const { t, language } = useLanguageStore();
   const rtlStyle = useRTLStyle();
+  const isRTL = language === 'ar';
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -227,12 +228,12 @@ export default function DashboardScreen() {
             </View>
             <Text style={[styles.statNumber, rtlStyle]}>{formatNumber(stats.properties.total)}</Text>
             <Text style={[styles.statLabel, rtlStyle]}>{t('totalProperties')}</Text>
-            <View style={styles.statDetails}>
-              <View style={styles.statBadge}>
+            <View style={[styles.statDetails, isRTL && styles.statDetailsRTL]}>
+              <View style={[styles.statBadge, isRTL && styles.statBadgeRTL]}>
                 <Ionicons name="eye" size={12} color="#fff" />
                 <Text style={styles.badgeText}>{stats.properties.public} {t('public')}</Text>
               </View>
-              <View style={styles.statBadge}>
+              <View style={[styles.statBadge, isRTL && styles.statBadgeRTL]}>
                 <Ionicons name="lock-closed" size={12} color="#fff" />
                 <Text style={styles.badgeText}>{stats.properties.private} Private</Text>
               </View>
@@ -253,12 +254,12 @@ export default function DashboardScreen() {
             </View>
             <Text style={[styles.statNumber, rtlStyle]}>{formatNumber(stats.leads.total)}</Text>
             <Text style={[styles.statLabel, rtlStyle]}>{t('totalLeads')}</Text>
-            <View style={styles.statDetails}>
-              <View style={styles.statBadge}>
+            <View style={[styles.statDetails, isRTL && styles.statDetailsRTL]}>
+              <View style={[styles.statBadge, isRTL && styles.statBadgeRTL]}>
                 <Ionicons name="star" size={12} color="#fff" />
                 <Text style={styles.badgeText}>{stats.leads.new} New</Text>
               </View>
-              <View style={styles.statBadge}>
+              <View style={[styles.statBadge, isRTL && styles.statBadgeRTL]}>
                 <Ionicons name="checkmark-circle" size={12} color="#fff" />
                 <Text style={styles.badgeText}>{stats.leads.won} Won</Text>
               </View>
@@ -279,12 +280,12 @@ export default function DashboardScreen() {
             </View>
             <Text style={[styles.statNumber, rtlStyle]}>{formatNumber(stats.team.total)}</Text>
             <Text style={[styles.statLabel, rtlStyle]}>{t('teamMembers')}</Text>
-            <View style={styles.statDetails}>
-              <View style={styles.statBadge}>
+            <View style={[styles.statDetails, isRTL && styles.statDetailsRTL]}>
+              <View style={[styles.statBadge, isRTL && styles.statBadgeRTL]}>
                 <Ionicons name="shield-checkmark" size={12} color="#fff" />
                 <Text style={styles.badgeText}>{stats.team.managers} {t('managers')}</Text>
               </View>
-              <View style={styles.statBadge}>
+              <View style={[styles.statBadge, isRTL && styles.statBadgeRTL]}>
                 <Ionicons name="person" size={12} color="#fff" />
                 <Text style={styles.badgeText}>{stats.team.employees} Staff</Text>
               </View>
@@ -305,8 +306,8 @@ export default function DashboardScreen() {
             </View>
             <Text style={[styles.statNumber, rtlStyle]}>{formatCurrency(stats.properties.valueStats.total_value)}</Text>
             <Text style={[styles.statLabel, rtlStyle]}>{t('totalValue')}</Text>
-            <View style={styles.statDetails}>
-              <View style={styles.statBadge}>
+            <View style={[styles.statDetails, isRTL && styles.statDetailsRTL]}>
+              <View style={[styles.statBadge, isRTL && styles.statBadgeRTL]}>
                 <Ionicons name="trending-up" size={12} color="#fff" />
                 <Text style={styles.badgeText}>Avg: {formatCurrency(stats.properties.valueStats.avg_value)}</Text>
               </View>
@@ -554,5 +555,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#666',
     textAlign: 'center',
+  },
+  // RTL Styles
+  statDetailsRTL: {
+    flexDirection: 'row-reverse',
+  },
+  statBadgeRTL: {
+    flexDirection: 'row-reverse',
   },
 });

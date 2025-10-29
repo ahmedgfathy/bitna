@@ -15,7 +15,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import theme from '../../config/theme';
 import { Property } from '../../types/property';
@@ -28,7 +28,7 @@ import { AuthenticatedStackParamList } from '../../types/navigation';
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 const isDesktop = isWeb && width > 768;
-const numColumns = isDesktop ? 4 : 1; // 4 columns for desktop
+const numColumns = isDesktop ? 6 : 1; // 6 columns for desktop
 
 type PropertiesScreenNavigationProp = NativeStackNavigationProp<AuthenticatedStackParamList>;
 
@@ -38,6 +38,7 @@ export default function PropertiesScreen() {
   const navigation = useNavigation<PropertiesScreenNavigationProp>();
   const searchInputRef = useRef<TextInput>(null);
   const flatListRef = useRef<FlatList>(null);
+  const savedPageRef = useRef<number>(1);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -61,7 +62,7 @@ export default function PropertiesScreen() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const ITEMS_PER_PAGE = 50; // Changed to 50 items per page
+  const ITEMS_PER_PAGE = 24; // 24 items per page (4 rows × 6 columns)
 
   useEffect(() => {
     loadProperties();
@@ -130,6 +131,17 @@ export default function PropertiesScreen() {
 
   // Prevent losing focus by using a stable key for FlatList
   const flatListKey = useMemo(() => `flatlist-${numColumns}`, [numColumns]);
+
+  // Restore page when returning from detail view
+  useFocusEffect(
+    useCallback(() => {
+      // When screen comes into focus, restore the saved page
+      if (savedPageRef.current !== currentPage) {
+        setCurrentPage(savedPageRef.current);
+        loadProperties(savedPageRef.current, false);
+      }
+    }, [])
+  );
 
   const loadProperties = async (page: number = 1, append: boolean = false) => {
     try {
@@ -573,6 +585,8 @@ export default function PropertiesScreen() {
         // If in selection mode, toggle selection
         toggleSelection(item.id);
       } else {
+        // Save current page before navigating
+        savedPageRef.current = currentPage;
         // Navigate to detail screen
         navigation.navigate('PropertyDetail', { propertyId: item.id });
       }
@@ -1070,7 +1084,7 @@ const styles = StyleSheet.create({
   // Image Container
   imageContainer: {
     width: '100%',
-    height: 200,
+    height: 140,
     position: 'relative',
     backgroundColor: theme.colors.border,
   },
@@ -1140,20 +1154,20 @@ const styles = StyleSheet.create({
   
   // Card Content
   cardContent: {
-    padding: theme.spacing.lg,
+    padding: theme.spacing.sm,
   },
   cardTitleSection: {
-    marginBottom: theme.spacing.sm,
+    marginBottom: 4,
   },
   propertyTitle: {
-    fontSize: theme.typography.fontSize.lg,
+    fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.textPrimary,
-    marginBottom: 6,
-    lineHeight: 24,
+    marginBottom: 4,
+    lineHeight: 18,
   },
   propertyPrice: {
-    fontSize: theme.typography.fontSize.xl,
+    fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.primary,
   },
@@ -1162,14 +1176,14 @@ const styles = StyleSheet.create({
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-    gap: 6,
+    marginBottom: 4,
+    gap: 4,
   },
   locationIcon: {
-    fontSize: 14,
+    fontSize: 12,
   },
   propertyLocation: {
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textSecondary,
     flex: 1,
   },
@@ -1178,20 +1192,20 @@ const styles = StyleSheet.create({
   featuresContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.xs,
+    marginBottom: 4,
+    paddingVertical: 4,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
   featureIcon: {
-    fontSize: 16,
+    fontSize: 12,
   },
   featureText: {
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: theme.typography.fontSize.xs,
     color: theme.colors.textSecondary,
     fontWeight: theme.typography.fontWeight.medium,
   },
@@ -1200,12 +1214,12 @@ const styles = StyleSheet.create({
   badgesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.xs,
-    marginBottom: theme.spacing.sm,
+    gap: 4,
+    marginBottom: 4,
   },
   badge: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: theme.borderRadius.sm,
   },
   typeBadge: {
@@ -1225,8 +1239,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: 6,
+    paddingHorizontal: theme.spacing.sm,
     backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.lg,
     marginTop: theme.spacing.xs,
@@ -1255,6 +1269,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
     ...theme.shadows.lg,
+    zIndex: 1000,
+    elevation: 10,
   },
   bulkAction: {
     flex: 1,

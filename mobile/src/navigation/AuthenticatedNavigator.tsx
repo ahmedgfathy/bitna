@@ -188,9 +188,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   mainContentDesktop: {
-    maxWidth: 1200,
     flex: 1,
-    marginHorizontal: 'auto',
   },
   rightSidebar: {
     width: 300,

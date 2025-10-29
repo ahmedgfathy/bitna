@@ -315,7 +315,8 @@ const styles = StyleSheet.create({
   },
   brandSectionRTL: {
     flexDirection: 'row-reverse',
-    marginLeft: 'auto',
+    marginLeft: 0,
+    marginRight: 0,
   },
   navContentRTL: {
     flexDirection: 'row-reverse',
@@ -325,7 +326,7 @@ const styles = StyleSheet.create({
   },
   rightSectionRTL: {
     flexDirection: 'row-reverse',
-    marginRight: 'auto',
+    marginRight: 0,
     marginLeft: 0,
   },
   userSectionRTL: {

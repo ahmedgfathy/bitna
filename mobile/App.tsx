@@ -1,10 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import PublicNavigator from './src/navigation/PublicNavigator';
 import AuthenticatedNavigator from './src/navigation/AuthenticatedNavigator';
 import { useAuthStore } from './src/stores/authStore';
+import { useLanguageStore } from './src/stores/languageStore';
+
+const NAVIGATION_STATE_KEY = '@contaboo:navigation_state';
 
 // Linking configuration to preserve URL state on refresh
 const linking = {
@@ -21,6 +25,9 @@ const linking = {
 
 export default function App() {
   const { isAuthenticated, isLoading, restoreSession } = useAuthStore();
+  const { initLanguage } = useLanguageStore();
+  const [isReady, setIsReady] = useState(false);
+  const [initialState, setInitialState] = useState();
 
   // Set document title for web
   useEffect(() => {
@@ -38,13 +45,37 @@ export default function App() {
     }
   }, []);
 
-  // Restore session on app load
+  // Restore session and navigation state on app load
   useEffect(() => {
-    restoreSession();
-  }, []);
+    const restoreState = async () => {
+      try {
+        // Restore language first
+        await initLanguage();
+        
+        // Restore auth session
+        await restoreSession();
+        
+        // Restore navigation state
+        const savedStateString = await AsyncStorage.getItem(NAVIGATION_STATE_KEY);
+        const state = savedStateString ? JSON.parse(savedStateString) : undefined;
+        
+        if (state !== undefined) {
+          setInitialState(state);
+        }
+      } catch (e) {
+        console.error('Failed to restore state:', e);
+      } finally {
+        setIsReady(true);
+      }
+    };
 
-  // Show loading spinner while checking authentication
-  if (isLoading) {
+    if (!isReady) {
+      restoreState();
+    }
+  }, [isReady]);
+
+  // Show loading spinner while checking authentication or restoring state
+  if (!isReady || isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2563eb" />
@@ -53,7 +84,14 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer linking={linking}>
+    <NavigationContainer 
+      linking={linking}
+      initialState={initialState}
+      onStateChange={(state) => {
+        // Save navigation state whenever it changes
+        AsyncStorage.setItem(NAVIGATION_STATE_KEY, JSON.stringify(state));
+      }}
+    >
       {isAuthenticated ? <AuthenticatedNavigator /> : <PublicNavigator />}
       <StatusBar style="auto" />
     </NavigationContainer>

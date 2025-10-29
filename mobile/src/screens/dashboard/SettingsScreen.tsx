@@ -10,7 +10,8 @@ type TabType = 'account' | 'company' | 'team' | 'preferences';
 
 export default function SettingsScreen() {
   const { user, tenant, logout } = useAuthStore();
-  const { t } = useLanguageStore();
+  const { t, language } = useLanguageStore();
+  const isRTL = language === 'ar';
   const [activeTab, setActiveTab] = useState<TabType>('account');
   
   // Modal states
@@ -92,8 +93,8 @@ export default function SettingsScreen() {
         return (
           <View style={styles.tabContent}>
             {/* Profile Header with Avatar */}
-            <View style={styles.profileHeader}>
-              <View style={styles.avatarContainer}>
+            <View style={[styles.profileHeader, isRTL && styles.profileHeaderRTL]}>
+              <View style={[styles.avatarContainer, isRTL && styles.avatarContainerRTL]}>
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>
                     {user?.name?.charAt(0).toUpperCase() || '?'}
@@ -109,7 +110,7 @@ export default function SettingsScreen() {
 
             {/* Account Information Card */}
             <View style={styles.card}>
-              <View style={styles.cardHeader}>
+              <View style={[styles.cardHeader, isRTL && styles.cardHeaderRTL]}>
                 <Text style={styles.cardTitle}>{t('personalInfo')}</Text>
                 <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
                   <Text style={styles.editButtonText}>✏️ {t('edit')}</Text>
@@ -117,7 +118,7 @@ export default function SettingsScreen() {
               </View>
               
               <View style={styles.infoGrid}>
-                <View style={styles.infoItem}>
+                <View style={[styles.infoItem, isRTL && styles.infoItemRTL]}>
                   <Text style={styles.infoIcon}>👤</Text>
                   <View style={styles.infoContent}>
                     <Text style={styles.infoLabel}>{t('name')}</Text>
@@ -125,7 +126,7 @@ export default function SettingsScreen() {
                   </View>
                 </View>
 
-                <View style={styles.infoItem}>
+                <View style={[styles.infoItem, isRTL && styles.infoItemRTL]}>
                   <Text style={styles.infoIcon}>📱</Text>
                   <View style={styles.infoContent}>
                     <Text style={styles.infoLabel}>{t('mobileNumber')}</Text>
@@ -134,7 +135,7 @@ export default function SettingsScreen() {
                 </View>
 
                 {user?.email && (
-                  <View style={styles.infoItem}>
+                  <View style={[styles.infoItem, isRTL && styles.infoItemRTL]}>
                     <Text style={styles.infoIcon}>📧</Text>
                     <View style={styles.infoContent}>
                       <Text style={styles.infoLabel}>{t('email')}</Text>
@@ -143,7 +144,7 @@ export default function SettingsScreen() {
                   </View>
                 )}
 
-                <View style={styles.infoItem}>
+                <View style={[styles.infoItem, isRTL && styles.infoItemRTL]}>
                   <Text style={styles.infoIcon}>💼</Text>
                   <View style={styles.infoContent}>
                     <Text style={styles.infoLabel}>{t('employeeRole')}</Text>
@@ -159,11 +160,11 @@ export default function SettingsScreen() {
             <View style={styles.card}>
               <Text style={styles.cardTitle}>🔐 Security</Text>
               <TouchableOpacity 
-                style={styles.primaryActionButton}
+                style={[styles.primaryActionButton, isRTL && styles.primaryActionButtonRTL]}
                 onPress={() => setShowChangePasswordModal(true)}
               >
-                <View style={styles.actionButtonContent}>
-                  <Text style={styles.actionButtonIcon}>🔑</Text>
+                <View style={[styles.actionButtonContent, isRTL && styles.actionButtonContentRTL]}>
+                  <Text style={[styles.actionButtonIcon, isRTL && styles.actionButtonIconRTL]}>🔑</Text>
                   <View style={styles.actionButtonText}>
                     <Text style={styles.actionButtonTitle}>{t('changePassword')}</Text>
                     <Text style={styles.actionButtonSubtitle}>Update your password</Text>
@@ -224,7 +225,7 @@ export default function SettingsScreen() {
             <View style={styles.card}>
               <Text style={styles.cardTitle}>ℹ️ App Information</Text>
               <View style={styles.infoGrid}>
-                <View style={styles.infoItem}>
+                <View style={[styles.infoItem, isRTL && styles.infoItemRTL]}>
                   <Text style={styles.infoIcon}>📦</Text>
                   <View style={styles.infoContent}>
                     <Text style={styles.infoLabel}>Version</Text>
@@ -232,7 +233,7 @@ export default function SettingsScreen() {
                   </View>
                 </View>
 
-                <View style={styles.infoItem}>
+                <View style={[styles.infoItem, isRTL && styles.infoItemRTL]}>
                   <Text style={styles.infoIcon}>🔧</Text>
                   <View style={styles.infoContent}>
                     <Text style={styles.infoLabel}>Environment</Text>
@@ -240,7 +241,7 @@ export default function SettingsScreen() {
                   </View>
                 </View>
 
-                <View style={styles.infoItem}>
+                <View style={[styles.infoItem, isRTL && styles.infoItemRTL]}>
                   <Text style={styles.infoIcon}>🏢</Text>
                   <View style={styles.infoContent}>
                     <Text style={styles.infoLabel}>Tenant ID</Text>
@@ -276,6 +277,7 @@ export default function SettingsScreen() {
               style={[
                 styles.tab,
                 activeTab === tab.id && styles.activeTab,
+                isRTL && styles.tabRTL,
               ]}
               onPress={() => setActiveTab(tab.id)}
             >
@@ -304,7 +306,7 @@ export default function SettingsScreen() {
         onRequestClose={() => setShowEditProfileModal(false)}
       >
         <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+          <View style={[styles.modalHeader, isRTL && styles.modalHeaderRTL]}>
             <TouchableOpacity onPress={() => setShowEditProfileModal(false)}>
               <Text style={styles.modalCloseButton}>✕</Text>
             </TouchableOpacity>
@@ -347,7 +349,7 @@ export default function SettingsScreen() {
             </View>
           </ScrollView>
 
-          <View style={styles.modalFooter}>
+          <View style={[styles.modalFooter, isRTL && styles.modalFooterRTL]}>
             <TouchableOpacity 
               style={styles.modalButtonSecondary}
               onPress={() => setShowEditProfileModal(false)}
@@ -372,7 +374,7 @@ export default function SettingsScreen() {
         onRequestClose={() => setShowChangePasswordModal(false)}
       >
         <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+          <View style={[styles.modalHeader, isRTL && styles.modalHeaderRTL]}>
             <TouchableOpacity onPress={() => setShowChangePasswordModal(false)}>
               <Text style={styles.modalCloseButton}>✕</Text>
             </TouchableOpacity>
@@ -415,7 +417,7 @@ export default function SettingsScreen() {
             </View>
           </ScrollView>
 
-          <View style={styles.modalFooter}>
+          <View style={[styles.modalFooter, isRTL && styles.modalFooterRTL]}>
             <TouchableOpacity 
               style={styles.modalButtonSecondary}
               onPress={() => setShowChangePasswordModal(false)}
@@ -761,5 +763,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748b',
     marginTop: 6,
+  },
+  // RTL Styles
+  tabRTL: {
+    flexDirection: 'row-reverse',
+  },
+  profileHeaderRTL: {
+    flexDirection: 'row-reverse',
+  },
+  avatarContainerRTL: {
+    marginRight: 0,
+    marginLeft: 16,
+  },
+  cardHeaderRTL: {
+    flexDirection: 'row-reverse',
+  },
+  infoItemRTL: {
+    flexDirection: 'row-reverse',
+  },
+  primaryActionButtonRTL: {
+    flexDirection: 'row-reverse',
+  },
+  actionButtonContentRTL: {
+    flexDirection: 'row-reverse',
+  },
+  actionButtonIconRTL: {
+    marginRight: 0,
+    marginLeft: 12,
+  },
+  modalHeaderRTL: {
+    flexDirection: 'row-reverse',
+  },
+  modalFooterRTL: {
+    flexDirection: 'row-reverse',
   },
 });
