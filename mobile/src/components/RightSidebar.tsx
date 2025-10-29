@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useLanguageStore } from '../stores/languageStore';
 import apiClient from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,6 +22,8 @@ interface MonthlyStats {
 }
 
 export default function RightSidebar() {
+  const { t, language } = useLanguageStore();
+  const isRTL = language === 'ar';
   const navigation = useNavigation<NativeStackNavigationProp<AuthenticatedStackParamList>>();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStats>({
@@ -90,7 +93,7 @@ export default function RightSidebar() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Activity Feed */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Activity</Text>
+        <Text style={[styles.sectionTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('recentActivity')}</Text>
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color="#2563eb" />
@@ -114,20 +117,20 @@ export default function RightSidebar() {
                 />
               </View>
               <View style={styles.activityContent}>
-                <Text style={styles.activityText}>{activity.description}</Text>
-                <Text style={styles.activityTime}>{getTimeAgo(activity.created_at)}</Text>
+                <Text style={[styles.activityText, { textAlign: isRTL ? 'right' : 'left' }]}>{activity.description}</Text>
+                <Text style={[styles.activityTime, { textAlign: isRTL ? 'right' : 'left' }]}>{getTimeAgo(activity.created_at)}</Text>
               </View>
             </View>
           ))
         ) : (
-          <Text style={styles.emptyText}>No recent activity</Text>
+          <Text style={[styles.emptyText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('noRecentActivity')}</Text>
         )}
       </View>
 
       {/* Notifications */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Notifications</Text>
+          <Text style={[styles.sectionTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('notificationsTitle')}</Text>
           <View style={styles.badge}>
             <Text style={styles.badgeText}>0</Text>
           </View>
@@ -138,8 +141,8 @@ export default function RightSidebar() {
         >
           <Ionicons name="mail-outline" size={20} color="#2563eb" />
           <View style={styles.notificationContent}>
-            <Text style={styles.notificationText}>View all leads</Text>
-            <Text style={styles.notificationTime}>Click to open</Text>
+            <Text style={[styles.notificationText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('viewAllLeadsLink')}</Text>
+            <Text style={[styles.notificationTime, { textAlign: isRTL ? 'right' : 'left' }]}>{t('clickToOpen')}</Text>
           </View>
         </TouchableOpacity>
         <TouchableOpacity 
@@ -148,8 +151,8 @@ export default function RightSidebar() {
         >
           <Ionicons name="home-outline" size={20} color="#f59e0b" />
           <View style={styles.notificationContent}>
-            <Text style={styles.notificationText}>Manage properties</Text>
-            <Text style={styles.notificationTime}>Click to open</Text>
+            <Text style={[styles.notificationText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('manageProperties')}</Text>
+            <Text style={[styles.notificationTime, { textAlign: isRTL ? 'right' : 'left' }]}>{t('clickToOpen')}</Text>
           </View>
         </TouchableOpacity>
         <TouchableOpacity 
@@ -158,15 +161,15 @@ export default function RightSidebar() {
         >
           <Ionicons name="people-outline" size={20} color="#10b981" />
           <View style={styles.notificationContent}>
-            <Text style={styles.notificationText}>View team members</Text>
-            <Text style={styles.notificationTime}>Click to open</Text>
+            <Text style={[styles.notificationText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('viewTeamMembers')}</Text>
+            <Text style={[styles.notificationTime, { textAlign: isRTL ? 'right' : 'left' }]}>{t('clickToOpen')}</Text>
           </View>
         </TouchableOpacity>
       </View>
 
       {/* Special Tasks */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Special Tasks</Text>
+        <Text style={[styles.sectionTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('specialTasks')}</Text>
         <TouchableOpacity 
           style={styles.specialTaskItem}
           onPress={() => setShowImportModal(true)}
@@ -175,15 +178,15 @@ export default function RightSidebar() {
             <Ionicons name="cloud-upload-outline" size={20} color="#42b72a" />
           </View>
           <View style={styles.specialTaskContent}>
-            <Text style={styles.specialTaskText}>Import Properties CSV</Text>
-            <Text style={styles.specialTaskSubtext}>Bulk add properties from file</Text>
+            <Text style={[styles.specialTaskText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('importPropertiesCSV')}</Text>
+            <Text style={[styles.specialTaskSubtext, { textAlign: isRTL ? 'right' : 'left' }]}>{t('bulkAddProperties')}</Text>
           </View>
         </TouchableOpacity>
       </View>
 
       {/* Quick Stats Widget */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>This Month</Text>
+        <Text style={[styles.sectionTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('thisMonth')}</Text>
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color="#2563eb" />
@@ -191,15 +194,15 @@ export default function RightSidebar() {
         ) : (
           <View style={styles.statsWidget}>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Revenue</Text>
+              <Text style={[styles.statLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{t('revenue')}</Text>
               <Text style={styles.statValue}>{formatCurrency(monthlyStats.revenue)}</Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>New Leads</Text>
+              <Text style={[styles.statLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{t('newLeadsCount')}</Text>
               <Text style={styles.statValue}>{formatNumber(monthlyStats.newLeads)}</Text>
             </View>
             <View style={styles.statRow}>
-              <Text style={styles.statLabel}>Closed Deals</Text>
+              <Text style={[styles.statLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{t('closedDealsMonth')}</Text>
               <Text style={styles.statValue}>{formatNumber(monthlyStats.closedDeals)}</Text>
             </View>
           </View>

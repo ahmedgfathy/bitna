@@ -20,6 +20,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import theme from '../../config/theme';
 import { Property } from '../../types/property';
 import { useAuthStore } from '../../stores/authStore';
+import { useLanguageStore } from '../../stores/languageStore';
 import CSVImportModal from '../../components/CSVImportModal';
 import apiClient from '../../services/api';
 import { AuthenticatedStackParamList } from '../../types/navigation';
@@ -27,13 +28,16 @@ import { AuthenticatedStackParamList } from '../../types/navigation';
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 const isDesktop = isWeb && width > 768;
-const numColumns = isDesktop ? (width > 1200 ? 3 : 2) : 1;
+const numColumns = isDesktop ? 4 : 1; // 4 columns for desktop
 
 type PropertiesScreenNavigationProp = NativeStackNavigationProp<AuthenticatedStackParamList>;
 
 export default function PropertiesScreen() {
+  const { t, language } = useLanguageStore();
+  const isRTL = language === 'ar';
   const navigation = useNavigation<PropertiesScreenNavigationProp>();
   const searchInputRef = useRef<TextInput>(null);
+  const flatListRef = useRef<FlatList>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -57,11 +61,63 @@ export default function PropertiesScreen() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const ITEMS_PER_PAGE = 20;
+  const ITEMS_PER_PAGE = 50; // Changed to 50 items per page
 
   useEffect(() => {
     loadProperties();
   }, []);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!isWeb) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in search or other input
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      switch (e.key) {
+        case 'Home':
+          e.preventDefault();
+          if (currentPage !== 1) {
+            setCurrentPage(1);
+            loadProperties(1, false);
+            flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+          }
+          break;
+        case 'End':
+          e.preventDefault();
+          if (currentPage !== totalPages) {
+            setCurrentPage(totalPages);
+            loadProperties(totalPages, false);
+            flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+          }
+          break;
+        case 'PageUp':
+          e.preventDefault();
+          if (currentPage > 1) {
+            const newPage = currentPage - 1;
+            setCurrentPage(newPage);
+            loadProperties(newPage, false);
+            flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+          }
+          break;
+        case 'PageDown':
+          e.preventDefault();
+          if (currentPage < totalPages) {
+            const newPage = currentPage + 1;
+            setCurrentPage(newPage);
+            loadProperties(newPage, false);
+            flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentPage, totalPages]);
 
   // Debounce search input to prevent interrupting typing
   useEffect(() => {
@@ -588,22 +644,22 @@ export default function PropertiesScreen() {
         </View>
 
         {/* Card Content */}
-        <View style={styles.cardContent}>
+        <View style={[styles.cardContent, isRTL && styles.cardContentRTL]}>
           {/* Title & Price */}
-          <View style={styles.cardTitleSection}>
-            <Text style={styles.propertyTitle} numberOfLines={2}>
+          <View style={[styles.cardTitleSection, isRTL && styles.cardTitleSectionRTL]}>
+            <Text style={[styles.propertyTitle, isRTL && styles.textRTL]} numberOfLines={2}>
               {propertyTitle}
             </Text>
-            <Text style={styles.propertyPrice}>
+            <Text style={[styles.propertyPrice, isRTL && styles.textRTL]}>
               {propertyPrice}
             </Text>
           </View>
 
           {/* Location */}
           {(propertyCompound || propertyAddress || propertyRegion !== 'Unknown') && (
-            <View style={styles.locationRow}>
+            <View style={[styles.locationRow, isRTL && styles.locationRowRTL]}>
               <Text style={styles.locationIcon}>📍</Text>
-              <Text style={styles.propertyLocation} numberOfLines={1}>
+              <Text style={[styles.propertyLocation, isRTL && styles.textRTL]} numberOfLines={1}>
                 {propertyCompound || propertyAddress || propertyRegion}
                 {propertyDistrict && `, ${propertyDistrict}`}
               </Text>
@@ -611,27 +667,27 @@ export default function PropertiesScreen() {
           )}
 
           {/* Property Features */}
-          <View style={styles.featuresContainer}>
+          <View style={[styles.featuresContainer, isRTL && styles.featuresContainerRTL]}>
             {propertyBedrooms > 0 && (
-              <View style={styles.featureItem}>
+              <View style={[styles.featureItem, isRTL && styles.featureItemRTL]}>
                 <Text style={styles.featureIcon}>🛏️</Text>
                 <Text style={styles.featureText}>{propertyBedrooms}</Text>
               </View>
             )}
             {propertyBathrooms > 0 && (
-              <View style={styles.featureItem}>
+              <View style={[styles.featureItem, isRTL && styles.featureItemRTL]}>
                 <Text style={styles.featureIcon}>🚿</Text>
                 <Text style={styles.featureText}>{propertyBathrooms}</Text>
               </View>
             )}
             {propertyTotalArea > 0 && (
-              <View style={styles.featureItem}>
-                <Text style={styles.featureIcon}>�</Text>
+              <View style={[styles.featureItem, isRTL && styles.featureItemRTL]}>
+                <Text style={styles.featureIcon}>📏</Text>
                 <Text style={styles.featureText}>{propertyTotalArea}m²</Text>
               </View>
             )}
             {item.parking_spots_count && item.parking_spots_count > 0 && (
-              <View style={styles.featureItem}>
+              <View style={[styles.featureItem, isRTL && styles.featureItemRTL]}>
                 <Text style={styles.featureIcon}>🚗</Text>
                 <Text style={styles.featureText}>{item.parking_spots_count}</Text>
               </View>
@@ -639,7 +695,7 @@ export default function PropertiesScreen() {
           </View>
 
           {/* Badges Row */}
-          <View style={styles.badgesRow}>
+          <View style={[styles.badgesRow, isRTL && styles.badgesRowRTL]}>
             {propertyType !== 'Unknown' && (
               <View style={[styles.badge, styles.typeBadge]}>
                 <Text style={styles.badgeText}>{propertyType}</Text>
@@ -658,7 +714,7 @@ export default function PropertiesScreen() {
               style={styles.viewDetailsButton}
               onPress={handleCardPress}
             >
-              <Text style={styles.viewDetailsText}>View Details</Text>
+              <Text style={[styles.viewDetailsText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('viewDetails')}</Text>
               <Text style={styles.viewDetailsArrow}>→</Text>
             </TouchableOpacity>
           )}
@@ -670,7 +726,7 @@ export default function PropertiesScreen() {
   const renderHeader = () => (
     <View style={styles.header}>
       <View style={styles.titleRow}>
-        <Text style={styles.screenTitle}>Properties</Text>
+        <Text style={[styles.screenTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('properties')}</Text>
         <TouchableOpacity
           style={styles.headerFab}
           onPress={() => navigation.navigate('PropertyForm', { mode: 'create' })}
@@ -682,8 +738,8 @@ export default function PropertiesScreen() {
 
       <TextInput
         ref={searchInputRef}
-        style={styles.searchInput}
-        placeholder="Search properties..."
+        style={[styles.searchInput, { textAlign: isRTL ? 'right' : 'left' }]}
+        placeholder={t('searchPropertiesPlaceholder')}
         value={searchQuery}
         onChangeText={handleSearchChange}
         placeholderTextColor={theme.colors.textSecondary}
@@ -706,8 +762,8 @@ export default function PropertiesScreen() {
           style={[styles.filterChip, activeFilters.forSale && styles.filterChipActive]}
           onPress={() => toggleFilter('forSale')}
         >
-          <Text style={[styles.filterChipText, activeFilters.forSale && styles.filterChipTextActive]}>
-            🏷️ For Sale
+          <Text style={[styles.filterChipText, activeFilters.forSale && styles.filterChipTextActive, { textAlign: isRTL ? 'right' : 'left' }]}>
+            🏷️ {t('forSale')}
           </Text>
         </TouchableOpacity>
         
@@ -715,8 +771,8 @@ export default function PropertiesScreen() {
           style={[styles.filterChip, activeFilters.forRent && styles.filterChipActive]}
           onPress={() => toggleFilter('forRent')}
         >
-          <Text style={[styles.filterChipText, activeFilters.forRent && styles.filterChipTextActive]}>
-            🏠 For Rent
+          <Text style={[styles.filterChipText, activeFilters.forRent && styles.filterChipTextActive, { textAlign: isRTL ? 'right' : 'left' }]}>
+            🏠 {t('forRent')}
           </Text>
         </TouchableOpacity>
 
@@ -732,9 +788,10 @@ export default function PropertiesScreen() {
           >
             <Text style={[
               styles.filterChipText, 
-              activeFilters.bedrooms?.includes(num) && styles.filterChipTextActive
+              activeFilters.bedrooms?.includes(num) && styles.filterChipTextActive,
+              { textAlign: isRTL ? 'right' : 'left' }
             ]}>
-              🛏️ {num} Bed{num > 1 ? 's' : ''}
+              🛏️ {num} {num > 1 ? t('beds') : t('bed')}
             </Text>
           </TouchableOpacity>
         ))}
@@ -744,8 +801,8 @@ export default function PropertiesScreen() {
           style={[styles.filterChip, activeFilters.featured && styles.filterChipActive]}
           onPress={() => toggleFilter('featured')}
         >
-          <Text style={[styles.filterChipText, activeFilters.featured && styles.filterChipTextActive]}>
-            ⭐ Featured
+          <Text style={[styles.filterChipText, activeFilters.featured && styles.filterChipTextActive, { textAlign: isRTL ? 'right' : 'left' }]}>
+            ⭐ {t('featured')}
           </Text>
         </TouchableOpacity>
 
@@ -755,17 +812,17 @@ export default function PropertiesScreen() {
             style={[styles.filterChip, styles.filterChipClear]}
             onPress={() => toggleFilter('clearAll')}
           >
-            <Text style={[styles.filterChipText, styles.filterChipTextClear]}>
-              ✕ Clear All
+            <Text style={[styles.filterChipText, styles.filterChipTextClear, { textAlign: isRTL ? 'right' : 'left' }]}>
+              ✕ {t('clearAllFilters')}
             </Text>
           </TouchableOpacity>
         )}
       </ScrollView>
 
-      <Text style={styles.resultsCount}>
-        {filteredProperties.length} of {totalCount} propert{totalCount === 1 ? 'y' : 'ies'}
-        {selectedIds.size > 0 && ` • ${selectedIds.size} selected`}
-        {hasActiveFilters && ' • Filtered'}
+      <Text style={[styles.resultsCount, { textAlign: isRTL ? 'right' : 'left' }]}>
+        {filteredProperties.length} {t('of')} {totalCount} {totalCount === 1 ? t('property') : t('propertiesPlural')}
+        {selectedIds.size > 0 && ` • ${selectedIds.size} ${t('selected')}`}
+        {hasActiveFilters && ` • ${t('filtered')}`}
       </Text>
     </View>
   );
@@ -776,10 +833,10 @@ export default function PropertiesScreen() {
     return (
       <View style={styles.bulkActionsBar}>
         <TouchableOpacity onPress={selectAll} style={styles.bulkAction}>
-          <Text style={styles.bulkActionText}>All</Text>
+          <Text style={[styles.bulkActionText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('all')}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={clearSelection} style={styles.bulkAction}>
-          <Text style={styles.bulkActionText}>Clear</Text>
+          <Text style={[styles.bulkActionText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('clear')}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => handleBulkTogglePublic(true)} style={styles.bulkAction}>
           <Text style={styles.bulkActionText}>📢</Text>
@@ -799,7 +856,7 @@ export default function PropertiesScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Loading properties...</Text>
+          <Text style={[styles.loadingText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('loadingProperties')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -809,6 +866,7 @@ export default function PropertiesScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={isDesktop ? styles.desktopWrapper : undefined}>
         <FlatList
+          ref={flatListRef}
           data={filteredProperties}
           renderItem={renderPropertyCard}
           keyExtractor={(item) => item.id}
@@ -818,30 +876,70 @@ export default function PropertiesScreen() {
           ListHeaderComponent={renderHeader}
           contentContainerStyle={[styles.listContent, isDesktop && styles.listContentDesktop]}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />
           }
-          onEndReached={loadMoreProperties}
-          onEndReachedThreshold={0.5}
           ListFooterComponent={
-            loadingMore ? (
-              <View style={styles.loadMoreContainer}>
-                <ActivityIndicator size="small" color={theme.colors.primary} />
-                <Text style={styles.loadMoreText}>Loading more...</Text>
-              </View>
-            ) : !hasMore && properties.length > 0 ? (
-              <View style={styles.loadMoreContainer}>
-                <Text style={styles.endOfListText}>✓ All {totalCount} properties loaded</Text>
-              </View>
-            ) : null
+            <View>
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <View style={styles.paginationContainer}>
+                  <TouchableOpacity
+                    style={[styles.paginationButton, currentPage === 1 && styles.paginationButtonDisabled]}
+                    onPress={() => {
+                      if (currentPage > 1) {
+                        setCurrentPage(currentPage - 1);
+                        loadProperties(currentPage - 1, false);
+                      }
+                    }}
+                    disabled={currentPage === 1}
+                  >
+                    <Text style={[styles.paginationButtonText, currentPage === 1 && styles.paginationButtonTextDisabled, { textAlign: isRTL ? 'right' : 'left' }]}>
+                      ← {t('previous')}
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <View style={styles.paginationInfo}>
+                    <Text style={[styles.paginationText, { textAlign: isRTL ? 'right' : 'left' }]}>
+                      {t('page')} {currentPage} {t('of')} {totalPages}
+                    </Text>
+                    <Text style={[styles.paginationSubtext, { textAlign: isRTL ? 'right' : 'left' }]}>
+                      {totalCount} {t('totalPropertiesCount')}
+                    </Text>
+                    {isWeb && (
+                      <Text style={[styles.keyboardHint, { textAlign: isRTL ? 'right' : 'left' }]}>
+                        ⌨️ {t('keyboardHints')}
+                      </Text>
+                    )}
+                  </View>
+                  
+                  <TouchableOpacity
+                    style={[styles.paginationButton, currentPage === totalPages && styles.paginationButtonDisabled]}
+                    onPress={() => {
+                      if (currentPage < totalPages) {
+                        setCurrentPage(currentPage + 1);
+                        loadProperties(currentPage + 1, false);
+                      }
+                    }}
+                    disabled={currentPage === totalPages}
+                  >
+                    <Text style={[styles.paginationButtonText, currentPage === totalPages && styles.paginationButtonTextDisabled, { textAlign: isRTL ? 'right' : 'left' }]}>
+                      {t('next')} →
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No properties found</Text>
-              <Text style={styles.emptyStateSubtext}>
+              <Text style={[styles.emptyStateText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('noPropertiesMessage')}</Text>
+              <Text style={[styles.emptyStateSubtext, { textAlign: isRTL ? 'right' : 'left' }]}>
                 {searchQuery || hasActiveFilters
-                  ? 'Try adjusting filters or search query'
-                  : 'Create your first property'}
+                  ? t('adjustFilters')
+                  : t('createFirstPropertyMessage')}
               </Text>
             </View>
           }
@@ -868,22 +966,22 @@ const styles = StyleSheet.create({
   desktopWrapper: {
     flex: 1,
     width: '100%',
-    paddingHorizontal: 24,
+    paddingHorizontal: 0, // Remove padding to make content full width
   },
   listContent: {
     paddingBottom: 80,
   },
   listContentDesktop: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 0,
   },
   columnWrapper: {
     justifyContent: 'flex-start',
-    gap: 16,
-    paddingHorizontal: 16,
+    gap: 12,
+    paddingHorizontal: 12,
   },
   header: {
     backgroundColor: theme.colors.white,
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: 20,
     paddingTop: theme.spacing.lg,
     paddingBottom: theme.spacing.md,
     borderBottomWidth: 1,
@@ -1256,5 +1354,78 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: theme.spacing.md,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    backgroundColor: theme.colors.white,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    marginTop: 20,
+  },
+  paginationButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 8,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  paginationButtonDisabled: {
+    backgroundColor: theme.colors.border,
+    opacity: 0.5,
+  },
+  paginationButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  paginationButtonTextDisabled: {
+    color: theme.colors.textTertiary,
+  },
+  paginationInfo: {
+    alignItems: 'center',
+  },
+  paginationText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    marginBottom: 4,
+  },
+  paginationSubtext: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    marginBottom: 4,
+  },
+  keyboardHint: {
+    fontSize: 10,
+    color: theme.colors.textTertiary,
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+  // RTL Styles
+  cardContentRTL: {
+    flexDirection: 'column',
+  },
+  cardTitleSectionRTL: {
+    flexDirection: 'row-reverse',
+  },
+  locationRowRTL: {
+    flexDirection: 'row-reverse',
+  },
+  featuresContainerRTL: {
+    flexDirection: 'row-reverse',
+  },
+  featureItemRTL: {
+    flexDirection: 'row-reverse',
+  },
+  badgesRowRTL: {
+    flexDirection: 'row-reverse',
+  },
+  textRTL: {
+    textAlign: 'right',
   },
 });

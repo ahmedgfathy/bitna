@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import theme from '../../config/theme';
+import { useLanguageStore } from '../../stores/languageStore';
 import CSVImportModal from '../../components/CSVImportModal';
 import apiClient from '../../services/api';
 
@@ -35,6 +36,8 @@ interface Lead {
 }
 
 export default function LeadsScreen({ navigation }: any) {
+  const { t, language } = useLanguageStore();
+  const isRTL = language === 'ar';
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -292,41 +295,41 @@ export default function LeadsScreen({ navigation }: any) {
         onLongPress={() => toggleSelection(item.id)}
         activeOpacity={0.7}
       >
-        <View style={styles.cardHeader}>
+        <View style={[styles.cardHeader, isRTL && styles.cardHeaderRTL]}>
           <View style={styles.checkbox}>
             {isSelected && <Text style={styles.checkmark}>✓</Text>}
           </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.leadName}>{item.name}</Text>
+          <View style={[styles.headerInfo, isRTL && styles.headerInfoRTL]}>
+            <Text style={[styles.leadName, isRTL && styles.textRTL]}>{item.name}</Text>
             <View style={[styles.statusPill, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-              <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+              <Text style={[styles.statusText, { color: getStatusColor(item.status) }, isRTL && styles.textRTL]}>
                 {getStatusEmoji(item.status)} {item.status}
               </Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.contactInfo}>
-          <Text style={styles.contactText}>📱 {item.phone}</Text>
-          {item.email && <Text style={styles.contactText}>📧 {item.email}</Text>}
+        <View style={[styles.contactInfo, isRTL && styles.contactInfoRTL]}>
+          <Text style={[styles.contactText, isRTL && styles.textRTL]}>📱 {item.phone}</Text>
+          {item.email && <Text style={[styles.contactText, isRTL && styles.textRTL]}>📧 {item.email}</Text>}
         </View>
 
-        <View style={styles.metaRow}>
+        <View style={[styles.metaRow, isRTL && styles.metaRowRTL]}>
           <View style={styles.sourceBadge}>
             <Text style={styles.sourceBadgeText}>{item.source}</Text>
           </View>
           {item.assignedTo && (
-            <Text style={styles.assignedText}>👤 {item.assignedTo}</Text>
+            <Text style={[styles.assignedText, isRTL && styles.textRTL]}>👤 {item.assignedTo}</Text>
           )}
         </View>
 
         {item.notes && (
-          <Text style={styles.notes} numberOfLines={2}>
+          <Text style={[styles.notes, isRTL && styles.textRTL]} numberOfLines={2}>
             💬 {item.notes}
           </Text>
         )}
 
-        <Text style={styles.timestamp}>{formatDate(item.createdAt)}</Text>
+        <Text style={[styles.timestamp, isRTL && styles.textRTL]}>{formatDate(item.createdAt)}</Text>
       </TouchableOpacity>
     );
   };
@@ -352,8 +355,8 @@ export default function LeadsScreen({ navigation }: any) {
       </View>
 
       <TextInput
-        style={styles.searchInput}
-        placeholder="Search leads..."
+        style={[styles.searchInput, { textAlign: isRTL ? 'right' : 'left' }]}
+        placeholder={t('searchLeadsPlaceholder')}
         value={searchQuery}
         onChangeText={setSearchQuery}
         placeholderTextColor={theme.colors.textSecondary}
@@ -364,39 +367,39 @@ export default function LeadsScreen({ navigation }: any) {
           style={[styles.filterChip, filterStatus === 'New' && styles.filterChipActive]}
           onPress={() => setFilterStatus(filterStatus === 'New' ? '' : 'New')}
         >
-          <Text style={[styles.filterChipText, filterStatus === 'New' && styles.filterChipTextActive]}>
-            New
+          <Text style={[styles.filterChipText, filterStatus === 'New' && styles.filterChipTextActive, { textAlign: isRTL ? 'right' : 'left' }]}>
+            {t('newStatus')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.filterChip, filterStatus === 'Contacted' && styles.filterChipActive]}
           onPress={() => setFilterStatus(filterStatus === 'Contacted' ? '' : 'Contacted')}
         >
-          <Text style={[styles.filterChipText, filterStatus === 'Contacted' && styles.filterChipTextActive]}>
-            Contacted
+          <Text style={[styles.filterChipText, filterStatus === 'Contacted' && styles.filterChipTextActive, { textAlign: isRTL ? 'right' : 'left' }]}>
+            {t('contacted')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.filterChip, filterStatus === 'Qualified' && styles.filterChipActive]}
           onPress={() => setFilterStatus(filterStatus === 'Qualified' ? '' : 'Qualified')}
         >
-          <Text style={[styles.filterChipText, filterStatus === 'Qualified' && styles.filterChipTextActive]}>
-            Qualified
+          <Text style={[styles.filterChipText, filterStatus === 'Qualified' && styles.filterChipTextActive, { textAlign: isRTL ? 'right' : 'left' }]}>
+            {t('qualifiedStatus')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.filterChip, filterSource === 'Website' && styles.filterChipActive]}
           onPress={() => setFilterSource(filterSource === 'Website' ? '' : 'Website')}
         >
-          <Text style={[styles.filterChipText, filterSource === 'Website' && styles.filterChipTextActive]}>
-            Website
+          <Text style={[styles.filterChipText, filterSource === 'Website' && styles.filterChipTextActive, { textAlign: isRTL ? 'right' : 'left' }]}>
+            {t('websiteFilter')}
           </Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.resultsCount}>
-        {filteredLeads.length} lead{filteredLeads.length === 1 ? '' : 's'}
-        {selectedIds.size > 0 && ` • ${selectedIds.size} selected`}
+      <Text style={[styles.resultsCount, { textAlign: isRTL ? 'right' : 'left' }]}>
+        {filteredLeads.length} {filteredLeads.length === 1 ? t('lead') : t('leadsPlural')}
+        {selectedIds.size > 0 && ` • ${selectedIds.size} ${t('selected')}`}
       </Text>
     </View>
   );
@@ -407,10 +410,10 @@ export default function LeadsScreen({ navigation }: any) {
     return (
       <View style={styles.bulkActionsBar}>
         <TouchableOpacity onPress={selectAll} style={styles.bulkAction}>
-          <Text style={styles.bulkActionText}>All</Text>
+          <Text style={[styles.bulkActionText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('all')}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={clearSelection} style={styles.bulkAction}>
-          <Text style={styles.bulkActionText}>Clear</Text>
+          <Text style={[styles.bulkActionText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('clear')}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => handleBulkChangeStatus('Contacted')} style={styles.bulkAction}>
           <Text style={styles.bulkActionText}>📞</Text>
@@ -430,7 +433,7 @@ export default function LeadsScreen({ navigation }: any) {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Loading leads...</Text>
+          <Text style={[styles.loadingText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('loadingLeads')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -772,5 +775,21 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '300',
     color: '#ffffff',
+  },
+  // RTL Styles
+  cardHeaderRTL: {
+    flexDirection: 'row-reverse',
+  },
+  headerInfoRTL: {
+    flexDirection: 'row-reverse',
+  },
+  contactInfoRTL: {
+    flexDirection: 'column',
+  },
+  metaRowRTL: {
+    flexDirection: 'row-reverse',
+  },
+  textRTL: {
+    textAlign: 'right',
   },
 });

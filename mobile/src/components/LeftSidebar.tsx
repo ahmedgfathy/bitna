@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../stores/authStore';
+import { useLanguageStore } from '../stores/languageStore';
 import apiClient from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,6 +17,8 @@ interface QuickStats {
 export default function LeftSidebar() {
   const user = useAuthStore((state) => state.user);
   const tenant = useAuthStore((state) => state.tenant);
+  const { t, language } = useLanguageStore();
+  const isRTL = language === 'ar';
   const navigation = useNavigation<NativeStackNavigationProp<AuthenticatedStackParamList>>();
   const [stats, setStats] = useState<QuickStats>({
     totalProperties: 0,
@@ -61,7 +64,7 @@ export default function LeftSidebar() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Quick Stats */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Stats</Text>
+        <Text style={[styles.sectionTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('quickStats')}</Text>
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color="#2563eb" />
@@ -71,21 +74,21 @@ export default function LeftSidebar() {
             <View style={styles.statItem}>
               <Ionicons name="business-outline" size={20} color="#2563eb" />
               <View style={styles.statContent}>
-                <Text style={styles.statLabel}>Properties</Text>
+                <Text style={[styles.statLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{t('properties')}</Text>
                 <Text style={styles.statValue}>{formatNumber(stats.totalProperties)}</Text>
               </View>
             </View>
             <View style={styles.statItem}>
               <Ionicons name="document-text-outline" size={20} color="#10b981" />
               <View style={styles.statContent}>
-                <Text style={styles.statLabel}>Active Leads</Text>
+                <Text style={[styles.statLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{t('activeLeads')}</Text>
                 <Text style={styles.statValue}>{formatNumber(stats.activeLeads)}</Text>
               </View>
             </View>
             <View style={styles.statItem}>
               <Ionicons name="checkmark-circle-outline" size={20} color="#8b5cf6" />
               <View style={styles.statContent}>
-                <Text style={styles.statLabel}>Closed Deals</Text>
+                <Text style={[styles.statLabel, { textAlign: isRTL ? 'right' : 'left' }]}>{t('closedDeals')}</Text>
                 <Text style={styles.statValue}>{formatNumber(stats.closedDeals)}</Text>
               </View>
             </View>
@@ -95,41 +98,41 @@ export default function LeftSidebar() {
 
       {/* Quick Links */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Links</Text>
+        <Text style={[styles.sectionTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('quickLinks')}</Text>
         <TouchableOpacity 
           style={styles.linkItem}
           onPress={() => navigation.navigate('PropertyForm', { mode: 'create' })}
         >
           <Ionicons name="add-circle-outline" size={18} color="#2563eb" />
-          <Text style={styles.linkText}>Add Property</Text>
+          <Text style={[styles.linkText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('addProperty')}</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.linkItem}
           onPress={() => navigation.navigate('LeadForm', { mode: 'create' })}
         >
           <Ionicons name="person-add-outline" size={18} color="#10b981" />
-          <Text style={styles.linkText}>Add Lead</Text>
+          <Text style={[styles.linkText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('addLead')}</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.linkItem}
           onPress={() => navigation.navigate('Leads')}
         >
           <Ionicons name="calendar-outline" size={18} color="#f59e0b" />
-          <Text style={styles.linkText}>View Leads</Text>
+          <Text style={[styles.linkText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('viewLeads')}</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.linkItem}
           onPress={() => navigation.navigate('Team')}
         >
           <Ionicons name="people-outline" size={18} color="#8b5cf6" />
-          <Text style={styles.linkText}>Team Members</Text>
+          <Text style={[styles.linkText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('teamMembersLink')}</Text>
         </TouchableOpacity>
       </View>
 
       {/* Saved Searches */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Saved Searches</Text>
-        <Text style={styles.emptyText}>No saved searches yet</Text>
+        <Text style={[styles.sectionTitle, { textAlign: isRTL ? 'right' : 'left' }]}>{t('savedSearches')}</Text>
+        <Text style={[styles.emptyText, { textAlign: isRTL ? 'right' : 'left' }]}>{t('noSavedSearches')}</Text>
       </View>
     </ScrollView>
   );

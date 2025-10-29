@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform, Dimensions } from '
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import { useAuthStore } from '../stores/authStore';
+import { useLanguageStore } from '../stores/languageStore';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const { width } = Dimensions.get('window');
@@ -11,6 +12,8 @@ const isDesktop = isWeb && width >= 1024;
 
 export default function TopNavBar() {
   const navigation = useNavigation<any>();
+  const { t, language } = useLanguageStore();
+  const isRTL = language === 'ar';
   const user = useAuthStore((state) => state.user);
   const tenant = useAuthStore((state) => state.tenant);
   const logout = useAuthStore((state) => state.logout);
@@ -22,12 +25,12 @@ export default function TopNavBar() {
   });
 
   const navItems = [
-    { name: 'Dashboard', icon: 'home-outline', route: 'Dashboard' },
-    { name: 'Properties', icon: 'business-outline', route: 'Properties' },
-    { name: 'Leads', icon: 'document-text-outline', route: 'Leads' },
-    ...(tenant?.type === 'company' ? [{ name: 'Team', icon: 'people-outline', route: 'Team' }] : []),
-    { name: 'Settings', icon: 'settings-outline', route: 'Settings' },
-    { name: 'Administration', icon: 'shield-outline', route: 'Administration' },
+    { name: 'dashboard', icon: 'home-outline', route: 'Dashboard' },
+    { name: 'properties', icon: 'business-outline', route: 'Properties' },
+    { name: 'leads', icon: 'document-text-outline', route: 'Leads' },
+    ...(tenant?.type === 'company' ? [{ name: 'teamMembers', icon: 'people-outline', route: 'Team' }] : []),
+    { name: 'settings', icon: 'settings-outline', route: 'Settings' },
+    { name: 'administration', icon: 'shield-outline', route: 'Administration' },
   ];
 
   const handleNavigate = (route: string) => {
@@ -44,22 +47,30 @@ export default function TopNavBar() {
   };
 
   return (
-    <View style={[styles.container, isDesktop && styles.containerDesktop]}>
+    <View style={[
+      styles.container, 
+      isDesktop && styles.containerDesktop,
+      isRTL && styles.containerRTL
+    ]}>
       {/* Logo + Company Info (Left) - Clickable to go home */}
-      <TouchableOpacity style={styles.brandSection} onPress={handleGoHome} activeOpacity={0.7}>
+      <TouchableOpacity style={[styles.brandSection, isRTL && styles.brandSectionRTL]} onPress={handleGoHome} activeOpacity={0.7}>
         <View style={styles.logoCircle}>
           <Text style={styles.logoLetter}>C</Text>
         </View>
         {isDesktop && (
           <View style={styles.companyInfo}>
-            <Text style={styles.companyName}>Contaboo</Text>
-            <Text style={styles.companyTagline}>Real Estate CRM</Text>
+            <Text style={[styles.companyName, isRTL && styles.textRTL]}>Contaboo</Text>
+            <Text style={[styles.companyTagline, isRTL && styles.textRTL]}>{t('realEstateCRM')}</Text>
           </View>
         )}
       </TouchableOpacity>
 
       {/* Center Navigation */}
-      <View style={[styles.navContent, isDesktop && styles.navContentDesktop]}>
+      <View style={[
+        styles.navContent, 
+        isDesktop && styles.navContentDesktop,
+        isRTL && styles.navContentRTL
+      ]}>
         {navItems.map((item) => {
           const isActive = currentRoute === item.route;
           return (
@@ -69,6 +80,7 @@ export default function TopNavBar() {
                 styles.navItem,
                 isActive && styles.navItemActive,
                 isDesktop && styles.navItemDesktop,
+                isRTL && styles.navItemRTL,
               ]}
               onPress={() => handleNavigate(item.route)}
               activeOpacity={0.7}
@@ -79,8 +91,12 @@ export default function TopNavBar() {
                 color={isActive ? '#2563eb' : '#64748b'}
               />
               {isDesktop && (
-                <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>
-                  {item.name}
+                <Text style={[
+                  styles.navLabel, 
+                  isActive && styles.navLabelActive,
+                  isRTL && styles.textRTL
+                ]}>
+                  {t(item.name as any)}
                 </Text>
               )}
             </TouchableOpacity>
@@ -89,16 +105,16 @@ export default function TopNavBar() {
       </View>
 
       {/* Right Section: User Info + Language + Logout */}
-      <View style={styles.rightSection}>
+      <View style={[styles.rightSection, isRTL && styles.rightSectionRTL]}>
         {isDesktop && (
-          <View style={styles.userSection}>
+          <View style={[styles.userSection, isRTL && styles.userSectionRTL]}>
             <View style={styles.avatarSmall}>
               <Text style={styles.avatarText}>{user?.name?.charAt(0) || 'A'}</Text>
             </View>
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{user?.name || 'Ahmed Gomaa'}</Text>
-              <Text style={styles.userRole}>{user?.role || 'Owner'}</Text>
-              <Text style={styles.companyTaglineSmall}>{tenant?.name || 'Contaboo'}</Text>
+              <Text style={[styles.userName, isRTL && styles.textRTL]}>{user?.name || 'Ahmed Gomaa'}</Text>
+              <Text style={[styles.userRole, isRTL && styles.textRTL]}>{user?.role || t('owner')}</Text>
+              <Text style={[styles.companyTaglineSmall, isRTL && styles.textRTL]}>{tenant?.name || 'Contaboo'}</Text>
             </View>
           </View>
         )}
@@ -107,9 +123,9 @@ export default function TopNavBar() {
         <LanguageSwitcher />
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <TouchableOpacity style={[styles.logoutButton, isRTL && styles.logoutButtonRTL]} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color="#dc2626" />
-          {isDesktop && <Text style={styles.logoutText}>Logout</Text>}
+          {isDesktop && <Text style={[styles.logoutText, isRTL && styles.textRTL]}>{t('logout')}</Text>}
         </TouchableOpacity>
       </View>
     </View>
@@ -148,6 +164,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginRight: 'auto',
   },
   logoCircle: {
     width: isDesktop ? 40 : 32,
@@ -186,7 +203,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: isDesktop ? 12 : 6,
-    marginLeft: 'auto',
   },
   userSection: {
     flexDirection: 'row',
@@ -292,5 +308,33 @@ const styles = StyleSheet.create({
   },
   navLabelActive: {
     color: '#2563eb',
+  },
+  // RTL Styles
+  containerRTL: {
+    flexDirection: 'row-reverse',
+  },
+  brandSectionRTL: {
+    flexDirection: 'row-reverse',
+    marginLeft: 'auto',
+  },
+  navContentRTL: {
+    flexDirection: 'row-reverse',
+  },
+  navItemRTL: {
+    flexDirection: 'row-reverse',
+  },
+  rightSectionRTL: {
+    flexDirection: 'row-reverse',
+    marginRight: 'auto',
+    marginLeft: 0,
+  },
+  userSectionRTL: {
+    flexDirection: 'row-reverse',
+  },
+  logoutButtonRTL: {
+    flexDirection: 'row-reverse',
+  },
+  textRTL: {
+    textAlign: 'right',
   },
 });
