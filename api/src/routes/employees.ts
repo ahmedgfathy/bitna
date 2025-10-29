@@ -14,25 +14,33 @@ const router = express.Router();
  * GET /api/employees
  * Get all employees for the tenant (owners and managers only)
  */
-router.get('/', tenantIsolation, async (req, res) => {
+router.get('/', tenantIsolation, async (req, res): Promise<void> => {
   try {
     const tenantId = req.user!.tenantId;
     const userRole = req.user!.role;
     
     // Check permission
     if (userRole !== 'OWNER' && userRole !== 'MANAGER') {
-      return res.status(403).json({
+      res.status(403).json({
         status: 'error',
         message: 'Only owners and managers can view employees'
       });
+      return;
     }
     
     const { role, status } = req.query;
     
-    const employees = await getUsersByTenant(tenantId, {
-      role: role as string,
-      status: status as string
-    });
+    let employees = await getUsersByTenant(tenantId);
+    
+    // Filter by role if provided
+    if (role) {
+      employees = employees.filter(emp => emp.role === role);
+    }
+    
+    // Filter by status if provided
+    if (status) {
+      employees = employees.filter(emp => emp.status === status);
+    }
     
     res.json({
       status: 'success',
@@ -51,27 +59,29 @@ router.get('/', tenantIsolation, async (req, res) => {
  * POST /api/employees
  * Create new employee (owners and managers only)
  */
-router.post('/', tenantIsolation, async (req, res) => {
+router.post('/', tenantIsolation, async (req, res): Promise<void> => {
   try {
     const tenantId = req.user!.tenantId;
     const userRole = req.user!.role;
     
     // Check permission
     if (userRole !== 'OWNER' && userRole !== 'MANAGER') {
-      return res.status(403).json({
+      res.status(403).json({
         status: 'error',
         message: 'Only owners and managers can create employees'
       });
+      return;
     }
     
     const { name, mobile, email, role, status } = req.body;
     
     // Validate required fields
     if (!name || !mobile || !role) {
-      return res.status(400).json({
+      res.status(400).json({
         status: 'error',
         message: 'Name, mobile, and role are required'
       });
+      return;
     }
     
     // Generate temporary PIN (6 digits)
@@ -100,10 +110,11 @@ router.post('/', tenantIsolation, async (req, res) => {
     
     // Handle duplicate mobile number
     if (error.code === 'P2002') {
-      return res.status(400).json({
+      res.status(400).json({
         status: 'error',
         message: 'Mobile number already exists'
       });
+      return;
     }
     
     res.status(500).json({
@@ -117,18 +128,19 @@ router.post('/', tenantIsolation, async (req, res) => {
  * PUT /api/employees/:id
  * Update employee details (owners and managers only)
  */
-router.put('/:id', tenantIsolation, async (req, res) => {
+router.put('/:id', tenantIsolation, async (req, res): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const tenantId = req.user!.tenantId;
     const userRole = req.user!.role;
     
     // Check permission
     if (userRole !== 'OWNER' && userRole !== 'MANAGER') {
-      return res.status(403).json({
+      res.status(403).json({
         status: 'error',
         message: 'Only owners and managers can update employees'
       });
+      return;
     }
     
     const { name, mobile, email, role, status } = req.body;
@@ -142,10 +154,11 @@ router.put('/:id', tenantIsolation, async (req, res) => {
     });
     
     if (!updatedEmployee) {
-      return res.status(404).json({
+      res.status(404).json({
         status: 'error',
         message: 'Employee not found'
       });
+      return;
     }
     
     res.json({
@@ -156,10 +169,11 @@ router.put('/:id', tenantIsolation, async (req, res) => {
     console.error('Error updating employee:', error);
     
     if (error.code === 'P2002') {
-      return res.status(400).json({
+      res.status(400).json({
         status: 'error',
         message: 'Mobile number already exists'
       });
+      return;
     }
     
     res.status(500).json({
@@ -173,27 +187,29 @@ router.put('/:id', tenantIsolation, async (req, res) => {
  * DELETE /api/employees/:id
  * Deactivate employee (owners only)
  */
-router.delete('/:id', tenantIsolation, async (req, res) => {
+router.delete('/:id', tenantIsolation, async (req, res): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const tenantId = req.user!.tenantId;
     const userRole = req.user!.role;
     
     // Check permission (only owners can delete)
     if (userRole !== 'OWNER') {
-      return res.status(403).json({
+      res.status(403).json({
         status: 'error',
         message: 'Only owners can deactivate employees'
       });
+      return;
     }
     
     const result = await deactivateEmployee(id, tenantId);
     
     if (!result) {
-      return res.status(404).json({
+      res.status(404).json({
         status: 'error',
         message: 'Employee not found'
       });
+      return;
     }
     
     res.json({
@@ -213,18 +229,19 @@ router.delete('/:id', tenantIsolation, async (req, res) => {
  * POST /api/employees/:id/reset-pin
  * Reset employee PIN (owners and managers only)
  */
-router.post('/:id/reset-pin', tenantIsolation, async (req, res) => {
+router.post('/:id/reset-pin', tenantIsolation, async (req, res): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const tenantId = req.user!.tenantId;
     const userRole = req.user!.role;
     
     // Check permission
     if (userRole !== 'OWNER' && userRole !== 'MANAGER') {
-      return res.status(403).json({
+      res.status(403).json({
         status: 'error',
         message: 'Only owners and managers can reset PINs'
       });
+      return;
     }
     
     // Generate new temporary PIN
@@ -233,7 +250,7 @@ router.post('/:id/reset-pin', tenantIsolation, async (req, res) => {
     const result = await resetEmployeePin(id, tenantId, newPin);
     
     if (!result) {
-      return res.status(404).json({
+      res.status(404).json({
         status: 'error',
         message: 'Employee not found'
       });

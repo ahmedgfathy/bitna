@@ -11,17 +11,18 @@ const router = express.Router();
  * GET /api/company/profile
  * Get company profile for authenticated tenant
  */
-router.get('/profile', tenantIsolation, async (req, res) => {
+router.get('/profile', tenantIsolation, async (req, res): Promise<void> => {
   try {
     const tenantId = req.user!.tenantId;
     
     const profile = await getTenantProfile(tenantId);
     
     if (!profile) {
-      return res.status(404).json({
+      res.status(404).json({
         status: 'error',
         message: 'Company profile not found'
       });
+      return;
     }
     
     res.json({
@@ -41,17 +42,18 @@ router.get('/profile', tenantIsolation, async (req, res) => {
  * PUT /api/company/profile
  * Update company profile (owners and managers only)
  */
-router.put('/profile', tenantIsolation, async (req, res) => {
+router.put('/profile', tenantIsolation, async (req, res): Promise<void> => {
   try {
     const tenantId = req.user!.tenantId;
     const userRole = req.user!.role;
     
     // Check permission (only owners and managers can update company profile)
     if (userRole !== 'OWNER' && userRole !== 'MANAGER') {
-      return res.status(403).json({
+      res.status(403).json({
         status: 'error',
         message: 'Only owners and managers can update company profile'
       });
+      return;
     }
     
     const {

@@ -28,15 +28,16 @@ router.get('/', tenantIsolation, async (req, res) => {
  * POST /api/users/employee
  * Add a new employee (owner only)
  */
-router.post('/employee', tenantIsolation, requireOwner, async (req, res) => {
+router.post('/employee', tenantIsolation, requireOwner, async (req, res): Promise<void> => {
   try {
     const { name, mobile, role } = req.body;
 
     if (!name || !mobile) {
-      return res.status(400).json({
+      res.status(400).json({
         status: 'error',
         message: 'Name and mobile are required',
       });
+      return;
     }
 
     const user = await db.addEmployeeToTenant({

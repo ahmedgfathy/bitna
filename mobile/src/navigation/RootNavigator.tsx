@@ -18,12 +18,13 @@ export default function RootNavigator() {
       }}
     >
       <Stack.Screen name="Main" component={AuthenticatedNavigator} />
-            <Stack.Screen
-        name="Root"
-        component={NavigationSwitcher}
+      <Stack.Screen 
+        name="PublicHome" 
+        component={HomeScreen}
         options={{
           headerShown: false,
-          headerTitle: 'Contaboo',
+        }}
+      />
     </Stack.Navigator>
   );
 }

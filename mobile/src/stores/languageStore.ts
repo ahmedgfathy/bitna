@@ -27,12 +27,11 @@ export const useLanguageStore = create<LanguageStore>((set, get) => ({
       await AsyncStorage.setItem(LANGUAGE_KEY, lang);
       const isRTL = lang === 'ar';
       
-      // Update RTL layout (requires app reload in production)
-      if (I18nManager.isRTL !== isRTL) {
-        I18nManager.forceRTL(isRTL);
-        // Note: In production, you'd need to reload the app
-        // For web, this will work immediately
-      }
+      // Don't force RTL layout - only use RTL for text direction
+      // We'll handle text alignment in the UI components
+      // if (I18nManager.isRTL !== isRTL) {
+      //   I18nManager.forceRTL(isRTL);
+      // }
 
       set({ language: lang, isRTL });
     } catch (error) {
@@ -45,7 +44,8 @@ export const useLanguageStore = create<LanguageStore>((set, get) => ({
       const savedLang = await AsyncStorage.getItem(LANGUAGE_KEY);
       if (savedLang && (savedLang === 'en' || savedLang === 'ar')) {
         const isRTL = savedLang === 'ar';
-        I18nManager.forceRTL(isRTL);
+        // Don't force RTL layout on init
+        // I18nManager.forceRTL(isRTL);
         set({ language: savedLang, isRTL });
       }
     } catch (error) {

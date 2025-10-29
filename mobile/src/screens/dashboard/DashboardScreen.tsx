@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useAuthStore } from '../../stores/authStore';
 import { useLanguageStore } from '../../stores/languageStore';
+import { useRTLStyle } from '../../components/RTLText';
 import apiClient from '../../services/api';
 
 interface DashboardStats {
@@ -43,6 +44,7 @@ export default function DashboardScreen() {
   const tenant = useAuthStore((state) => state.tenant);
   const logout = useAuthStore((state) => state.logout);
   const { t, initLanguage } = useLanguageStore();
+  const rtlStyle = useRTLStyle();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +96,7 @@ export default function DashboardScreen() {
         {error && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorIcon}>⚠️</Text>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={[styles.errorText, rtlStyle]}>{error}</Text>
             <TouchableOpacity style={styles.retryButton} onPress={fetchDashboardStats}>
               <Text style={styles.retryButtonText}>Retry Connection</Text>
             </TouchableOpacity>
@@ -110,19 +112,19 @@ export default function DashboardScreen() {
             <View style={styles.statsGrid}>
               <View style={styles.statCard}>
                 <Text style={styles.statValue}>{stats?.properties.total || 0}</Text>
-                <Text style={styles.statLabel}>{t('properties')}</Text>
-                <Text style={styles.statSubtext}>{stats?.properties.public || 0} {t('public')}</Text>
+                <Text style={[styles.statLabel, rtlStyle]}>{t('properties')}</Text>
+                <Text style={[styles.statSubtext, rtlStyle]}>{stats?.properties.public || 0} {t('public')}</Text>
               </View>
               <View style={styles.statCard}>
                 <Text style={styles.statValue}>{stats?.leads.total || 0}</Text>
-                <Text style={styles.statLabel}>{t('leads')}</Text>
-                <Text style={styles.statSubtext}>{stats?.leads.qualified || 0} {t('qualified')}</Text>
+                <Text style={[styles.statLabel, rtlStyle]}>{t('leads')}</Text>
+                <Text style={[styles.statSubtext, rtlStyle]}>{stats?.leads.qualified || 0} {t('qualified')}</Text>
               </View>
               {tenant?.type === 'company' && (
                 <View style={styles.statCard}>
                   <Text style={styles.statValue}>{stats?.team.total || 0}</Text>
-                  <Text style={styles.statLabel}>{t('teamMembers')}</Text>
-                  <Text style={styles.statSubtext}>{stats?.team.managers || 0} {t('managers')}</Text>
+                  <Text style={[styles.statLabel, rtlStyle]}>{t('teamMembers')}</Text>
+                  <Text style={[styles.statSubtext, rtlStyle]}>{stats?.team.managers || 0} {t('managers')}</Text>
                 </View>
               )}
             </View>
@@ -130,11 +132,11 @@ export default function DashboardScreen() {
             {/* Recent Properties */}
             {stats?.properties.recent && stats.properties.recent.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Recent Properties</Text>
+                <Text style={[styles.sectionTitle, rtlStyle]}>Recent Properties</Text>
                 {stats.properties.recent.map((property) => (
                   <View key={property.id} style={styles.propertyCard}>
                     <View style={styles.propertyHeader}>
-                      <Text style={styles.propertyName} numberOfLines={1}>
+                      <Text style={[styles.propertyName, rtlStyle]} numberOfLines={1}>
                         {property.name}
                       </Text>
                       <Text style={styles.propertyPrice}>
@@ -148,13 +150,13 @@ export default function DashboardScreen() {
                     <View style={styles.propertyDetails}>
                       <View style={styles.propertyDetailRow}>
                         <Text style={styles.propertyDetailIcon}>📍</Text>
-                        <Text style={styles.propertyDetailText} numberOfLines={1}>
+                        <Text style={[styles.propertyDetailText, rtlStyle]} numberOfLines={1}>
                           {property.region}
                         </Text>
                       </View>
                       <View style={styles.propertyDetailRow}>
                         <Text style={styles.propertyDetailIcon}>📐</Text>
-                        <Text style={styles.propertyDetailText}>
+                        <Text style={[styles.propertyDetailText, rtlStyle]}>
                           {property.area > 0 ? `${property.area} m²` : 'N/A'}
                         </Text>
                       </View>
@@ -162,11 +164,11 @@ export default function DashboardScreen() {
                     {property.type && (
                       <View style={styles.propertyBadges}>
                         <View style={styles.propertyBadge}>
-                          <Text style={styles.propertyBadgeText}>{property.type}</Text>
+                          <Text style={[styles.propertyBadgeText, rtlStyle]}>{property.type}</Text>
                         </View>
                         {property.status && (
                           <View style={[styles.propertyBadge, styles.propertyBadgeStatus]}>
-                            <Text style={styles.propertyBadgeText}>{property.status}</Text>
+                            <Text style={[styles.propertyBadgeText, rtlStyle]}>{property.status}</Text>
                           </View>
                         )}
                       </View>
@@ -177,25 +179,6 @@ export default function DashboardScreen() {
             )}
           </>
         )}
-
-        {/* Quick Actions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('quickActions')}</Text>
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionIcon}>🏠</Text>
-            <Text style={styles.actionText}>{t('addNewProperty')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-            <Text style={styles.actionIcon}>👥</Text>
-            <Text style={styles.actionText}>{t('viewAllLeads')}</Text>
-          </TouchableOpacity>
-          {tenant?.type === 'company' && (
-            <TouchableOpacity style={styles.actionButton}>
-              <Text style={styles.actionIcon}>👨‍💼</Text>
-              <Text style={styles.actionText}>{t('manageTeam')}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
       </ScrollView>
     </View>
   );
@@ -286,28 +269,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1e293b',
     marginBottom: 16,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-  },
-  actionIcon: {
-    fontSize: 24,
-    marginRight: 16,
-  },
-  actionText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1e293b',
   },
   propertyCard: {
     backgroundColor: '#ffffff',

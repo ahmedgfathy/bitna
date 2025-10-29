@@ -90,15 +90,17 @@ router.get('/overdue', tenantIsolation, async (req, res) => {
  * GET /api/activities/:id
  * Get a specific activity by ID
  */
-router.get('/:id', tenantIsolation, async (req, res) => {
+router.get('/:id', tenantIsolation, async (req, res): Promise<void> => {
   try {
-    const activity = await db.getActivityById(req.params.id, req.tenantId!);
+    const id = req.params.id as string;
+    const activity = await db.getActivityById(id, req.tenantId!);
     
     if (!activity) {
-      return res.status(404).json({
+      res.status(404).json({
         status: 'error',
         message: 'Activity not found',
       });
+      return;
     }
 
     res.json({
@@ -117,7 +119,7 @@ router.get('/:id', tenantIsolation, async (req, res) => {
  * POST /api/activities
  * Create a new activity
  */
-router.post('/', tenantIsolation, async (req, res) => {
+router.post('/', tenantIsolation, async (req, res): Promise<void> => {
   try {
     const {
       type,
@@ -134,7 +136,7 @@ router.post('/', tenantIsolation, async (req, res) => {
 
     // Validation
     if (!type || !title || !linkedType || !linkedId) {
-      return res.status(400).json({
+      res.status(400).json({
         status: 'error',
         message: 'Missing required fields: type, title, linkedType, linkedId',
       });
@@ -184,7 +186,8 @@ router.put('/:id', tenantIsolation, async (req, res) => {
       assignedToId,
     } = req.body;
 
-    const activity = await db.updateActivity(req.params.id, req.tenantId!, {
+    const id = req.params.id as string;
+    const activity = await db.updateActivity(id, req.tenantId!, {
       type,
       title,
       description,
@@ -211,9 +214,10 @@ router.put('/:id', tenantIsolation, async (req, res) => {
  * DELETE /api/activities/:id
  * Delete an activity
  */
-router.delete('/:id', tenantIsolation, async (req, res) => {
+router.delete('/:id', tenantIsolation, async (req, res): Promise<void> => {
   try {
-    await db.deleteActivity(req.params.id, req.tenantId!);
+    const id = req.params.id as string;
+    await db.deleteActivity(id, req.tenantId!);
 
     res.json({
       status: 'success',

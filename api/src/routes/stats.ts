@@ -8,12 +8,12 @@ const router = Router();
  * Get dashboard statistics for the authenticated user's tenant
  * Note: Returns empty stats if not authenticated (for demo purposes)
  */
-router.get('/dashboard', async (req, res) => {
+router.get('/dashboard', async (req, res): Promise<void> => {
   try {
     // Check if authenticated
     if (!req.user || !req.user.tenantId) {
       // Return empty stats for demo/testing
-      return res.json({
+      res.json({
         status: 'success',
         data: {
           properties: {
@@ -38,18 +38,21 @@ router.get('/dashboard', async (req, res) => {
           },
         },
       });
+      return;
     }
+
+    const tenantId = req.user.tenantId;
 
     // Fetch all data in parallel for better performance
     const [propertiesCount, leads, users, recentProperties] = await Promise.all([
-      db.countPropertiesByTenant(req.user.tenantId),
-      db.getLeadsByTenant(req.user.tenantId),
-      db.getUsersByTenant(req.user.tenantId),
-      db.getRecentProperties(req.user.tenantId, 5), // Get 5 most recent properties
+      db.countPropertiesByTenant(tenantId),
+      db.getLeadsByTenant(tenantId),
+      db.getUsersByTenant(tenantId),
+      db.getRecentProperties(tenantId, 5), // Get 5 most recent properties
     ]);
 
     // Get counts for published properties
-    const publishedCount = await db.countPublishedPropertiesByTenant(req.user.tenantId);
+    const publishedCount = await db.countPublishedPropertiesByTenant(tenantId);
 
     // Calculate additional metrics
     const qualifiedLeads = leads.filter(l => l.status === 'QUALIFIED').length;

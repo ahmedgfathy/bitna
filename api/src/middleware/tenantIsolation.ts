@@ -23,23 +23,25 @@ declare global {
  * 
  * It should be applied to all protected routes that require authentication.
  */
-export const tenantIsolation = (req: Request, res: Response, next: NextFunction) => {
+export const tenantIsolation = (req: Request, res: Response, next: NextFunction): void => {
   // Check if user is authenticated (this assumes auth middleware ran first)
   if (!req.user) {
-    return res.status(401).json({
+    res.status(401).json({
       status: 'error',
       message: 'Authentication required',
     });
+    return;
   }
 
   // Extract tenantId from authenticated user
   const tenantId = req.user.tenantId;
 
   if (!tenantId) {
-    return res.status(403).json({
+    res.status(403).json({
       status: 'error',
       message: 'User is not associated with a tenant',
     });
+    return;
   }
 
   // Attach tenantId to request object for easy access in controllers
@@ -54,21 +56,23 @@ export const tenantIsolation = (req: Request, res: Response, next: NextFunction)
  * Restricts access based on user role
  */
 export const requireRole = (...allowedRoles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         status: 'error',
         message: 'Authentication required',
       });
+      return;
     }
 
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({
+      res.status(403).json({
         status: 'error',
         message: 'Insufficient permissions',
         requiredRole: allowedRoles,
         yourRole: req.user.role,
       });
+      return;
     }
 
     next();

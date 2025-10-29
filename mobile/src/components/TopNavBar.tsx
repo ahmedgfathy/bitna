@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform, Dimensions } from '
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import { useAuthStore } from '../stores/authStore';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -101,10 +102,8 @@ export default function TopNavBar() {
           </View>
         )}
         
-        {/* Language Switcher - Import from DashboardScreen or create inline */}
-        <TouchableOpacity style={styles.langButton}>
-          <Ionicons name="globe-outline" size={20} color="#64748b" />
-        </TouchableOpacity>
+        {/* Language Switcher */}
+        <LanguageSwitcher />
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
