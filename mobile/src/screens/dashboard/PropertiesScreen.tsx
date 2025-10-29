@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,7 @@ type PropertiesScreenNavigationProp = NativeStackNavigationProp<AuthenticatedSta
 
 export default function PropertiesScreen() {
   const navigation = useNavigation<PropertiesScreenNavigationProp>();
+  const searchInputRef = useRef<TextInput>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -70,6 +71,9 @@ export default function PropertiesScreen() {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Prevent losing focus by using a stable key for FlatList
+  const flatListKey = useMemo(() => `flatlist-${numColumns}`, [numColumns]);
 
   const loadProperties = async (page: number = 1, append: boolean = false) => {
     try {
@@ -293,9 +297,15 @@ export default function PropertiesScreen() {
     );
   }, [activeFilters]);
 
-  // Optimize search input handler
+  // Optimize search input handler - prevent re-renders
   const handleSearchChange = useCallback((text: string) => {
     setSearchQuery(text);
+  }, []);
+
+  // Clear search handler
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    setDebouncedSearch('');
   }, []);
 
   const toggleSelection = (id: string) => {
@@ -618,6 +628,7 @@ export default function PropertiesScreen() {
       </View>
 
       <TextInput
+        ref={searchInputRef}
         style={styles.searchInput}
         placeholder="Search properties..."
         value={searchQuery}
@@ -626,6 +637,8 @@ export default function PropertiesScreen() {
         returnKeyType="search"
         autoCorrect={false}
         autoCapitalize="none"
+        blurOnSubmit={false}
+        selectTextOnFocus={false}
       />
 
       {/* Enhanced Filter Chips */}
@@ -746,11 +759,12 @@ export default function PropertiesScreen() {
           data={filteredProperties}
           renderItem={renderPropertyCard}
           keyExtractor={(item) => item.id}
-          key={numColumns} // Force re-render when columns change
+          key={flatListKey}
           numColumns={numColumns}
           columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
           ListHeaderComponent={renderHeader}
           contentContainerStyle={[styles.listContent, isDesktop && styles.listContentDesktop]}
+          keyboardShouldPersistTaps="handled"
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />
           }
