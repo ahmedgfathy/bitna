@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Image,
+  Animated,
 } from 'react-native';
 import { useAuthStore } from '../../stores/authStore';
 import { useLanguageStore } from '../../stores/languageStore';
@@ -82,9 +83,27 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Animation values for cards
+  const scaleAnim1 = useRef(new Animated.Value(0)).current;
+  const scaleAnim2 = useRef(new Animated.Value(0)).current;
+  const scaleAnim3 = useRef(new Animated.Value(0)).current;
+  const scaleAnim4 = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     fetchDashboardStats();
   }, []);
+
+  useEffect(() => {
+    // Animate cards on mount
+    if (!loading && stats) {
+      Animated.stagger(100, [
+        Animated.spring(scaleAnim1, { toValue: 1, useNativeDriver: true, tension: 50, friction: 7 }),
+        Animated.spring(scaleAnim2, { toValue: 1, useNativeDriver: true, tension: 50, friction: 7 }),
+        Animated.spring(scaleAnim3, { toValue: 1, useNativeDriver: true, tension: 50, friction: 7 }),
+        Animated.spring(scaleAnim4, { toValue: 1, useNativeDriver: true, tension: 50, friction: 7 }),
+      ]).start();
+    }
+  }, [loading, stats]);
 
   const fetchDashboardStats = async () => {
     try {
@@ -178,92 +197,122 @@ export default function DashboardScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.container} 
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={loading} onRefresh={fetchDashboardStats} />
+      }
+    >
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.welcomeText, rtlStyle]}>
-          {t('welcome')}, {user?.name || 'User'}
+          {t('welcomeBack')}, {user?.name || 'User'} 👋
         </Text>
         <Text style={[styles.subtitle, rtlStyle]}>{t('dashboardOverview')}</Text>
       </View>
 
-      {/* Main Stats Cards */}
+      {/* Main Stats Cards with Gradients & Icons */}
       <View style={styles.statsGrid}>
-        <View style={[styles.statCard, styles.primaryCard]}>
-          <Text style={[styles.statNumber, rtlStyle]}>{formatNumber(stats.properties.total)}</Text>
-          <Text style={[styles.statLabel, rtlStyle]}>{t('totalProperties')}</Text>
-        </View>
-
-        <View style={[styles.statCard, styles.successCard]}>
-          <Text style={[styles.statNumber, rtlStyle]}>{formatNumber(stats.leads.total)}</Text>
-          <Text style={[styles.statLabel, rtlStyle]}>{t('totalLeads')}</Text>
-        </View>
-
-        <View style={[styles.statCard, styles.infoCard]}>
-          <Text style={[styles.statNumber, rtlStyle]}>{formatNumber(stats.team.total)}</Text>
-          <Text style={[styles.statLabel, rtlStyle]}>{t('teamMembers')}</Text>
-        </View>
-
-        <View style={[styles.statCard, styles.warningCard]}>
-          <Text style={[styles.statNumber, rtlStyle]}>{formatCurrency(stats.properties.valueStats.total_value)}</Text>
-          <Text style={[styles.statLabel, rtlStyle]}>{t('totalValue')}</Text>
-        </View>
-      </View>
-
-      {/* Detailed Type Breakdown */}
-      <View style={styles.detailSection}>
-        <Text style={[styles.sectionTitle, rtlStyle]}>{t('propertyTypeBreakdown')}</Text>
-        {stats.properties.byType.slice(0, 8).map((item, index) => (
-          <View key={item.type_id || index} style={styles.detailRow}>
-            <View style={styles.detailLeft}>
-              <View style={[styles.colorDot, { backgroundColor: COLORS[index % COLORS.length] }]} />
-              <Text style={[styles.detailLabel, rtlStyle]}>{item.type || 'Unknown'}</Text>
+        {/* Properties Card */}
+        <Animated.View style={[styles.statCardWrapper, { transform: [{ scale: scaleAnim1 }] }]}>
+          <LinearGradient
+            colors={['#667eea', '#764ba2']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientCard}
+          >
+            <View style={styles.cardIcon}>
+              <Ionicons name="home" size={28} color="#fff" />
             </View>
-            <Text style={[styles.detailValue, rtlStyle]}>{formatNumber(item.count)}</Text>
-          </View>
-        ))}
-      </View>
+            <Text style={[styles.statNumber, rtlStyle]}>{formatNumber(stats.properties.total)}</Text>
+            <Text style={[styles.statLabel, rtlStyle]}>{t('totalProperties')}</Text>
+            <View style={styles.statDetails}>
+              <View style={styles.statBadge}>
+                <Ionicons name="eye" size={12} color="#fff" />
+                <Text style={styles.badgeText}>{stats.properties.public} {t('public')}</Text>
+              </View>
+              <View style={styles.statBadge}>
+                <Ionicons name="lock-closed" size={12} color="#fff" />
+                <Text style={styles.badgeText}>{stats.properties.private} Private</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </Animated.View>
 
-      {/* Value Statistics */}
-      <View style={styles.detailSection}>
-        <Text style={[styles.sectionTitle, rtlStyle]}>{t('valueStatistics')}</Text>
-        <View style={styles.valueGrid}>
-          <View style={styles.valueCard}>
-            <Text style={[styles.valueLabel, rtlStyle]}>{t('averagePrice')}</Text>
-            <Text style={[styles.valueAmount, rtlStyle]}>{formatCurrency(stats.properties.valueStats.avg_value)}</Text>
-          </View>
-          <View style={styles.valueCard}>
-            <Text style={[styles.valueLabel, rtlStyle]}>{t('minPrice')}</Text>
-            <Text style={[styles.valueAmount, rtlStyle]}>{formatCurrency(stats.properties.valueStats.min_value)}</Text>
-          </View>
-          <View style={styles.valueCard}>
-            <Text style={[styles.valueLabel, rtlStyle]}>{t('maxPrice')}</Text>
-            <Text style={[styles.valueAmount, rtlStyle]}>{formatCurrency(stats.properties.valueStats.max_value)}</Text>
-          </View>
-        </View>
-      </View>
+        {/* Leads Card */}
+        <Animated.View style={[styles.statCardWrapper, { transform: [{ scale: scaleAnim2 }] }]}>
+          <LinearGradient
+            colors={['#f093fb', '#f5576c']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientCard}
+          >
+            <View style={styles.cardIcon}>
+              <Ionicons name="people" size={28} color="#fff" />
+            </View>
+            <Text style={[styles.statNumber, rtlStyle]}>{formatNumber(stats.leads.total)}</Text>
+            <Text style={[styles.statLabel, rtlStyle]}>{t('totalLeads')}</Text>
+            <View style={styles.statDetails}>
+              <View style={styles.statBadge}>
+                <Ionicons name="star" size={12} color="#fff" />
+                <Text style={styles.badgeText}>{stats.leads.new} New</Text>
+              </View>
+              <View style={styles.statBadge}>
+                <Ionicons name="checkmark-circle" size={12} color="#fff" />
+                <Text style={styles.badgeText}>{stats.leads.won} Won</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </Animated.View>
 
-      {/* Lead Statistics */}
-      <View style={styles.detailSection}>
-        <Text style={[styles.sectionTitle, rtlStyle]}>{t('leadStatistics')}</Text>
-        <View style={styles.leadGrid}>
-          <View style={styles.leadCard}>
-            <Text style={[styles.leadNumber, rtlStyle]}>{stats.leads.new}</Text>
-            <Text style={[styles.leadLabel, rtlStyle]}>{t('newLeads')}</Text>
-          </View>
-          <View style={styles.leadCard}>
-            <Text style={[styles.leadNumber, rtlStyle]}>{stats.leads.qualified}</Text>
-            <Text style={[styles.leadLabel, rtlStyle]}>{t('qualified')}</Text>
-          </View>
-          <View style={styles.leadCard}>
-            <Text style={[styles.leadNumber, rtlStyle]}>{stats.leads.won}</Text>
-            <Text style={[styles.leadLabel, rtlStyle]}>{t('won')}</Text>
-          </View>
-          <View style={styles.leadCard}>
-            <Text style={[styles.leadNumber, rtlStyle]}>{stats.leads.lost}</Text>
-            <Text style={[styles.leadLabel, rtlStyle]}>{t('lost')}</Text>
-          </View>
-        </View>
+        {/* Team Card */}
+        <Animated.View style={[styles.statCardWrapper, { transform: [{ scale: scaleAnim3 }] }]}>
+          <LinearGradient
+            colors={['#4facfe', '#00f2fe']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientCard}
+          >
+            <View style={styles.cardIcon}>
+              <Ionicons name="briefcase" size={28} color="#fff" />
+            </View>
+            <Text style={[styles.statNumber, rtlStyle]}>{formatNumber(stats.team.total)}</Text>
+            <Text style={[styles.statLabel, rtlStyle]}>{t('teamMembers')}</Text>
+            <View style={styles.statDetails}>
+              <View style={styles.statBadge}>
+                <Ionicons name="shield-checkmark" size={12} color="#fff" />
+                <Text style={styles.badgeText}>{stats.team.managers} {t('managers')}</Text>
+              </View>
+              <View style={styles.statBadge}>
+                <Ionicons name="person" size={12} color="#fff" />
+                <Text style={styles.badgeText}>{stats.team.employees} Staff</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </Animated.View>
+
+        {/* Total Value Card */}
+        <Animated.View style={[styles.statCardWrapper, { transform: [{ scale: scaleAnim4 }] }]}>
+          <LinearGradient
+            colors={['#fa709a', '#fee140']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientCard}
+          >
+            <View style={styles.cardIcon}>
+              <Ionicons name="cash" size={28} color="#fff" />
+            </View>
+            <Text style={[styles.statNumber, rtlStyle]}>{formatCurrency(stats.properties.valueStats.total_value)}</Text>
+            <Text style={[styles.statLabel, rtlStyle]}>{t('totalValue')}</Text>
+            <View style={styles.statDetails}>
+              <View style={styles.statBadge}>
+                <Ionicons name="trending-up" size={12} color="#fff" />
+                <Text style={styles.badgeText}>Avg: {formatCurrency(stats.properties.valueStats.avg_value)}</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </Animated.View>
       </View>
 
       <View style={{ height: 40 }} />
@@ -311,7 +360,66 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     padding: 10,
-    gap: 10,
+    gap: 12,
+  },
+  statCardWrapper: {
+    flex: 1,
+    minWidth: '47%',
+  },
+  gradientCard: {
+    padding: 20,
+    borderRadius: 16,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    minHeight: 160,
+    justifyContent: 'space-between',
+  },
+  cardIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statNumber: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  statLabel: {
+    fontSize: 13,
+    color: '#fff',
+    opacity: 0.95,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  statDetails: {
+    flexDirection: 'row',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  statBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  badgeText: {
+    fontSize: 10,
+    color: '#fff',
+    fontWeight: '600',
   },
   statCard: {
     flex: 1,
@@ -335,17 +443,6 @@ const styles = StyleSheet.create({
   },
   warningCard: {
     backgroundColor: '#9C27B0',
-  },
-  statNumber: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#fff',
-    opacity: 0.9,
   },
   chartSection: {
     margin: 10,

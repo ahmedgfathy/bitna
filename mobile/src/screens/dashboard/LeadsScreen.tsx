@@ -492,9 +492,7 @@ const styles = StyleSheet.create({
   },
   desktopWrapper: {
     flex: 1,
-    alignSelf: 'center',
     width: '100%',
-    maxWidth: 1400,
     paddingHorizontal: 24,
   },
   listContent: {

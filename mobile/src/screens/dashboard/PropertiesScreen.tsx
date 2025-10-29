@@ -169,6 +169,15 @@ export default function PropertiesScreen() {
     loadProperties(1, false);
   };
 
+  // Helper function to check if a name looks like a code (e.g., SH-CD2-002-B-G1)
+  const isCodeLikeName = (name: string): boolean => {
+    if (!name) return false;
+    // Check if name has multiple hyphens or numbers with letters pattern
+    const codePattern = /^[A-Z]{1,3}-[A-Z0-9]+-\d+/i; // e.g., SH-CD2-002
+    const hasMultipleHyphens = (name.match(/-/g) || []).length >= 2;
+    return codePattern.test(name) || hasMultipleHyphens;
+  };
+
   // Filter and search properties - using debouncedSearch instead of searchQuery
   const filteredProperties = useMemo(() => {
     let filtered = properties;
@@ -245,6 +254,19 @@ export default function PropertiesScreen() {
     if (activeFilters.featured) {
       filtered = filtered.filter(p => p.is_featured);
     }
+
+    // Sort: Real names first, code-like names at the end
+    filtered.sort((a, b) => {
+      const aIsCode = isCodeLikeName(a.property_name || a.title || '');
+      const bIsCode = isCodeLikeName(b.property_name || b.title || '');
+      
+      // If one is code and other is not, non-code comes first
+      if (aIsCode && !bIsCode) return 1;
+      if (!aIsCode && bIsCode) return -1;
+      
+      // Otherwise maintain original order
+      return 0;
+    });
 
     return filtered;
   }, [properties, debouncedSearch, activeFilters]);
@@ -339,11 +361,29 @@ export default function PropertiesScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            const remainingProperties = properties.filter(p => !selectedIds.has(p.id));
-            setProperties(remainingProperties);
-            clearSelection();
-            Alert.alert('Success', 'Properties deleted');
+          onPress: async () => {
+            try {
+              const idsToDelete = Array.from(selectedIds);
+              console.log('🗑️ Deleting properties:', idsToDelete);
+              
+              // Delete each property from the database
+              const deletePromises = idsToDelete.map(id => 
+                apiClient.delete(`/properties/${id}`)
+              );
+              
+              await Promise.all(deletePromises);
+              
+              // Update local state
+              const remainingProperties = properties.filter(p => !selectedIds.has(p.id));
+              setProperties(remainingProperties);
+              setTotalCount(prev => prev - selectedIds.size);
+              clearSelection();
+              
+              Alert.alert('Success', `${idsToDelete.length} propert${idsToDelete.length === 1 ? 'y' : 'ies'} deleted`);
+            } catch (error: any) {
+              console.error('❌ Failed to delete properties:', error);
+              Alert.alert('Error', error.response?.data?.message || 'Failed to delete properties');
+            }
           },
         },
       ]
@@ -352,19 +392,39 @@ export default function PropertiesScreen() {
 
   const handleBulkTogglePublic = (makePublic: boolean) => {
     Alert.alert(
-      makePublic ? 'Make Public' : 'Make Private',
+      makePublic ? 'Publish to Homepage' : 'Make Private',
       `Change ${selectedIds.size} propert${selectedIds.size === 1 ? 'y' : 'ies'}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Confirm',
-          onPress: () => {
-            const updatedProperties = properties.map(p =>
-              selectedIds.has(p.id) ? { ...p, is_active: makePublic, is_available: makePublic } : p
-            );
-            setProperties(updatedProperties);
-            clearSelection();
-            Alert.alert('Success', 'Properties updated');
+          onPress: async () => {
+            try {
+              const idsToUpdate = Array.from(selectedIds);
+              console.log(`${makePublic ? '📢' : '🔒'} Updating properties:`, idsToUpdate);
+              
+              // Update each property in the database
+              const updatePromises = idsToUpdate.map(id => 
+                apiClient.put(`/properties/${id}`, {
+                  is_active: makePublic,
+                  is_available: makePublic
+                })
+              );
+              
+              await Promise.all(updatePromises);
+              
+              // Update local state
+              const updatedProperties = properties.map(p =>
+                selectedIds.has(p.id) ? { ...p, is_active: makePublic, is_available: makePublic } : p
+              );
+              setProperties(updatedProperties);
+              clearSelection();
+              
+              Alert.alert('Success', `${idsToUpdate.length} propert${idsToUpdate.length === 1 ? 'y' : 'ies'} ${makePublic ? 'published' : 'made private'}`);
+            } catch (error: any) {
+              console.error('❌ Failed to update properties:', error);
+              Alert.alert('Error', error.response?.data?.message || 'Failed to update properties');
+            }
           },
         },
       ]
@@ -611,20 +671,13 @@ export default function PropertiesScreen() {
     <View style={styles.header}>
       <View style={styles.titleRow}>
         <Text style={styles.screenTitle}>Properties</Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => navigation.navigate('PropertyForm', { mode: 'create' })}
-          >
-            <Text style={styles.addButtonText}>➕ Add Property</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.importButton}
-            onPress={() => setShowImportModal(true)}
-          >
-            <Text style={styles.importButtonText}>📥 Import CSV</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.headerFab}
+          onPress={() => navigation.navigate('PropertyForm', { mode: 'create' })}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.headerFabIcon}>+</Text>
+        </TouchableOpacity>
       </View>
 
       <TextInput
@@ -794,15 +847,6 @@ export default function PropertiesScreen() {
           }
         />
         {renderBulkActions()}
-        
-        {/* Floating Action Button */}
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={() => navigation.navigate('PropertyForm', { mode: 'create' })}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.fabIcon}>+</Text>
-        </TouchableOpacity>
 
         {/* CSV Import Modal */}
         <CSVImportModal
@@ -823,9 +867,7 @@ const styles = StyleSheet.create({
   },
   desktopWrapper: {
     flex: 1,
-    alignSelf: 'center',
     width: '100%',
-    maxWidth: 1400,
     paddingHorizontal: 24,
   },
   listContent: {
@@ -1159,40 +1201,23 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.textSecondary,
   },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 100,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  headerFab: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
-  fabIcon: {
-    fontSize: 32,
+  headerFabIcon: {
+    fontSize: 28,
     fontWeight: '300',
     color: '#ffffff',
-  },
-  importButton: {
-    backgroundColor: '#42b72a',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  importButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
   },
   headerButtons: {
     flexDirection: 'row',
