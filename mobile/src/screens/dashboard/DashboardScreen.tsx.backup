@@ -126,21 +126,40 @@ export default function DashboardScreen() {
   // Prepare chart data
   const statusChartData = stats.properties.byStatus.slice(0, 6).map((item, index) => ({
     name: item.status || 'Unknown',
-    count: item.count,
+    population: item.count,
     color: COLORS[index % COLORS.length],
     legendFontColor: '#666',
     legendFontSize: 12,
   }));
 
+  // Smart label formatter for property types
+  const formatTypeLabel = (type: string | null | undefined): string => {
+    if (!type) return 'Unknown';
+    if (type.includes('Apartment Compound')) return 'Apt Comp';
+    if (type.includes('Apartment Out')) return 'Apt Out';
+    if (type.includes('Apartment')) return 'Apartment';
+    if (type.includes('Standalone Compound')) return 'Standalone';
+    if (type.includes('Office')) return 'Office';
+    if (type.includes('Villa Out')) return 'Villa Out';
+    if (type.includes('Villa')) return 'Villa';
+    return type.length > 12 ? type.substring(0, 12) : type;
+  };
+
+  // Smart label formatter for regions
+  const formatRegionLabel = (region: string | null | undefined): string => {
+    if (!region) return 'Unknown';
+    return region.length > 12 ? region.substring(0, 12) : region;
+  };
+
   const typeBarData = {
-    labels: stats.properties.byType.slice(0, 5).map(item => item.type?.substring(0, 10) || 'Unknown'),
+    labels: stats.properties.byType.slice(0, 5).map(item => formatTypeLabel(item.type)),
     datasets: [{
       data: stats.properties.byType.slice(0, 5).map(item => item.count),
     }],
   };
 
   const regionBarData = {
-    labels: stats.properties.byRegion.slice(0, 5).map(item => item.region?.substring(0, 10) || 'Unknown'),
+    labels: stats.properties.byRegion.slice(0, 5).map(item => formatRegionLabel(item.region)),
     datasets: [{
       data: stats.properties.byRegion.slice(0, 5).map(item => item.count),
     }],
@@ -190,7 +209,7 @@ export default function DashboardScreen() {
             chartConfig={{
               color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
             }}
-            accessor="count"
+            accessor="population"
             backgroundColor="transparent"
             paddingLeft="15"
             absolute

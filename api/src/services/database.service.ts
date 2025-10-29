@@ -1267,3 +1267,70 @@ export const resetEmployeePin = async (
     },
   });
 };
+
+// Get recent properties by tenant for dashboard
+export const getRecentPropertiesByTenant = async (tenantId: string, limit: number = 5) => {
+  return await prisma.property.findMany({
+    where: { 
+      company_id: tenantId,
+      is_deleted: false,
+    },
+    take: limit,
+    orderBy: { created_at: 'desc' },
+    include: {
+      property_types: {
+        select: {
+          name: true,
+          display_name: true,
+        },
+      },
+      property_statuses: {
+        select: {
+          name: true,
+          display_name: true,
+        },
+      },
+      regions: {
+        select: {
+          name: true,
+          display_name: true,
+        },
+      },
+      property_images: {
+        orderBy: { display_order: 'asc' },
+        take: 1,
+      },
+    },
+  });
+};
+
+// Get recent activities by tenant for dashboard
+export const getRecentActivitiesByTenant = async (tenantId: string, limit: number = 10) => {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  return await prisma.activity.findMany({
+    where: { 
+      tenantId: tenantId,
+      dateTime: {
+        gte: sevenDaysAgo,
+      },
+    },
+    take: limit,
+    orderBy: { dateTime: 'desc' },
+    include: {
+      assignedTo: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+};

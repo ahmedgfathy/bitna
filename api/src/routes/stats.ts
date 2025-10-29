@@ -20,6 +20,16 @@ router.get('/dashboard', async (req, res): Promise<void> => {
             total: 0,
             public: 0,
             private: 0,
+            byType: [],
+            byStatus: [],
+            byRegion: [],
+            valueStats: {
+              total_value: 0,
+              avg_value: 0,
+              min_value: 0,
+              max_value: 0,
+            },
+            recent: [],
           },
           leads: {
             total: 0,
@@ -29,13 +39,16 @@ router.get('/dashboard', async (req, res): Promise<void> => {
             negotiating: 0,
             won: 0,
             lost: 0,
+            bySource: {},
           },
           team: {
             total: 0,
             employees: 0,
             managers: 0,
             owners: 0,
+            active: 0,
           },
+          recentActivities: [],
         },
       });
       return;
@@ -51,7 +64,9 @@ router.get('/dashboard', async (req, res): Promise<void> => {
       propertyByType,
       propertyByStatus,
       propertyByRegion,
-      valueStats
+      valueStats,
+      recentProperties,
+      recentActivities,
     ] = await Promise.all([
       db.countPropertiesByTenant(tenantId),
       db.getLeadsByTenant(tenantId),
@@ -60,13 +75,19 @@ router.get('/dashboard', async (req, res): Promise<void> => {
       db.getPropertyCountByStatus(tenantId),
       db.getPropertyCountByRegion(tenantId),
       db.getPropertyValueStats(tenantId),
+      db.getRecentPropertiesByTenant(tenantId, 5),
+      db.getRecentActivitiesByTenant(tenantId, 10),
     ]);
 
     // Get counts for published properties
     const publishedCount = await db.countPublishedPropertiesByTenant(tenantId);
 
-    // Calculate additional metrics
-    const qualifiedLeads = leads.filter(l => l.status === 'QUALIFIED').length;
+    // Lead statistics with source breakdown
+    const leadsBySource = leads.reduce((acc: any, lead) => {
+      const source = lead.source || 'UNKNOWN';
+      acc[source] = (acc[source] || 0) + 1;
+      return acc;
+    }, {});
 
     res.json({
       status: 'success',
@@ -79,22 +100,49 @@ router.get('/dashboard', async (req, res): Promise<void> => {
           byStatus: propertyByStatus,
           byRegion: propertyByRegion,
           valueStats: valueStats,
+          recent: recentProperties.map((p: any) => ({
+            id: p.id,
+            property_number: p.property_number,
+            property_name: p.property_name,
+            title: p.title,
+            type: p.property_types?.name,
+            region: p.regions?.name,
+            status: p.property_statuses?.name,
+            sale_price: p.sale_price,
+            rental_price_monthly: p.rental_price_monthly,
+            image: p.property_images?.[0]?.image_url || null,
+            created_at: p.created_at,
+          })),
         },
         leads: {
           total: leads.length,
-          new: leads.filter(l => l.status === 'NEW').length,
-          contacted: leads.filter(l => l.status === 'CONTACTED').length,
-          qualified: qualifiedLeads,
-          negotiating: leads.filter(l => l.status === 'NEGOTIATING').length,
-          won: leads.filter(l => l.status === 'WON').length,
-          lost: leads.filter(l => l.status === 'LOST').length,
+          new: leads.filter((l) => l.status === 'NEW').length,
+          contacted: leads.filter((l) => l.status === 'CONTACTED').length,
+          qualified: leads.filter((l) => l.status === 'QUALIFIED').length,
+          negotiating: leads.filter((l) => l.status === 'NEGOTIATING').length,
+          won: leads.filter((l) => l.status === 'WON').length,
+          lost: leads.filter((l) => l.status === 'LOST').length,
+          bySource: leadsBySource,
         },
         team: {
           total: users.length,
-          employees: users.filter(u => u.role === 'EMPLOYEE').length,
-          managers: users.filter(u => u.role === 'MANAGER').length,
-          owners: users.filter(u => u.role === 'OWNER').length,
+          active: users.filter((u) => u.status === 'ACTIVE').length,
+          employees: users.filter((u) => u.role === 'EMPLOYEE').length,
+          managers: users.filter((u) => u.role === 'MANAGER').length,
+          owners: users.filter((u) => u.role === 'OWNER').length,
         },
+        recentActivities: recentActivities.map((a: any) => ({
+          id: a.id,
+          type: a.type,
+          title: a.title,
+          status: a.status,
+          priority: a.priority,
+          assignedTo: a.assignedTo?.name,
+          createdBy: a.createdBy?.name,
+          linkedType: a.linkedType,
+          linkedId: a.linkedId,
+          dateTime: a.dateTime,
+        })),
       },
     });
   } catch (error) {

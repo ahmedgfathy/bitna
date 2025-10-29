@@ -167,10 +167,34 @@ const tools = {
   },
   getStats: {
     name: 'get_stats',
-    description: 'Get dashboard statistics from the Contaboo database',
+    description: 'Get comprehensive dashboard statistics from the Contaboo database including properties by type, status, region, leads analytics, team metrics, and recent activities',
     inputSchema: {
       type: 'object',
-      properties: {},
+      properties: {
+        tenantId: {
+          type: 'string',
+          description: 'Tenant ID to filter statistics (optional, returns global stats if not provided)',
+        },
+        includeRecent: {
+          type: 'boolean',
+          description: 'Include recent properties and activities in the response',
+          default: true,
+        },
+      },
+    },
+  },
+  getDashboardStats: {
+    name: 'get_dashboard_stats',
+    description: 'Get detailed dashboard statistics with property analytics, lead funnel, team metrics, and financial insights',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tenantId: {
+          type: 'string',
+          description: 'Tenant ID to filter statistics',
+          required: false,
+        },
+      },
     },
   },
   getStaticData: {
@@ -215,6 +239,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
         return await handleGetActivities(validatedArgs);
       case 'get_stats':
         return await handleGetStats(validatedArgs);
+      case 'get_dashboard_stats':
+        return await handleGetDashboardStats(validatedArgs);
       case 'get_static_data':
         return await handleGetStaticData(validatedArgs);
       default:
@@ -371,18 +397,51 @@ async function handleGetActivities(args: any) {
 }
 
 async function handleGetStats(args: any) {
-  const [totalProperties, totalLeads, totalUsers, recentActivities] = await Promise.all([
-    prisma.property.count({ where: { is_deleted: false } }),
-    prisma.lead.count(),
-    prisma.user.count({ where: { status: 'ACTIVE' } }),
-    prisma.activity.count({ where: { dateTime: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } }),
+  const { tenantId, includeRecent = true } = args;
+  
+  const where: any = { is_deleted: false };
+  if (tenantId) where.company_id = tenantId;
+
+  const [
+    totalProperties,
+    totalLeads,
+    totalUsers,
+    recentActivities,
+    publishedProperties,
+    recentProperties
+  ] = await Promise.all([
+    prisma.property.count({ where }),
+    tenantId ? prisma.lead.count({ where: { tenantId } }) : prisma.lead.count(),
+    prisma.user.count({ where: { ...(tenantId && { tenantId }), status: 'ACTIVE' } }),
+    prisma.activity.count({ 
+      where: { 
+        ...(tenantId && { tenantId }),
+        dateTime: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } 
+      } 
+    }),
+    prisma.property.count({ where: { ...where, is_published: true } }),
+    includeRecent ? prisma.property.findMany({
+      where,
+      include: {
+        property_types: { select: { name: true } },
+        regions: { select: { name: true } },
+        property_statuses: { select: { name: true } },
+      },
+      orderBy: { created_at: 'desc' },
+      take: 5,
+    }) : Promise.resolve([]),
   ]);
 
   const stats = {
-    properties: totalProperties,
+    properties: {
+      total: totalProperties,
+      published: publishedProperties,
+      private: totalProperties - publishedProperties,
+    },
     leads: totalLeads,
     users: totalUsers,
     recentActivities,
+    recentProperties: includeRecent ? recentProperties : [],
     timestamp: new Date().toISOString(),
   };
 
@@ -391,6 +450,220 @@ async function handleGetStats(args: any) {
       {
         type: 'text',
         text: JSON.stringify(stats, null, 2),
+      },
+    ],
+  };
+}
+
+async function handleGetDashboardStats(args: any) {
+  const { tenantId } = args;
+  
+  const where: any = { is_deleted: false };
+  if (tenantId) where.company_id = tenantId;
+
+  const leadWhere: any = {};
+  if (tenantId) leadWhere.tenantId = tenantId;
+
+  const userWhere: any = {};
+  if (tenantId) userWhere.tenantId = tenantId;
+
+  // Fetch all data in parallel
+  const [
+    propertiesCount,
+    publishedCount,
+    leads,
+    users,
+    propertyByType,
+    propertyByStatus,
+    propertyByRegion,
+    valueStats,
+    recentProperties,
+    recentActivities
+  ] = await Promise.all([
+    prisma.property.count({ where }),
+    prisma.property.count({ where: { ...where, is_published: true } }),
+    prisma.lead.findMany({
+      where: leadWhere,
+      select: { status: true, source: true },
+    }),
+    prisma.user.findMany({
+      where: userWhere,
+      select: { role: true, status: true },
+    }),
+    // Properties by type with aggregation
+    prisma.$queryRaw`
+      SELECT 
+        pt.id as type_id,
+        pt.name as type,
+        COUNT(p.id) as count
+      FROM properties p
+      LEFT JOIN property_types pt ON p.type_id = pt.id
+      WHERE p.is_deleted = false ${tenantId ? prisma.$queryRaw`AND p.company_id = ${tenantId}` : prisma.$queryRaw``}
+      GROUP BY pt.id, pt.name
+      ORDER BY count DESC
+      LIMIT 10
+    ` as Promise<any[]>,
+    // Properties by status
+    prisma.$queryRaw`
+      SELECT 
+        ps.id as status_id,
+        ps.name as status,
+        COUNT(p.id) as count
+      FROM properties p
+      LEFT JOIN property_statuses ps ON p.status_id = ps.id
+      WHERE p.is_deleted = false ${tenantId ? prisma.$queryRaw`AND p.company_id = ${tenantId}` : prisma.$queryRaw``}
+      GROUP BY ps.id, ps.name
+      ORDER BY count DESC
+    ` as Promise<any[]>,
+    // Properties by region
+    prisma.$queryRaw`
+      SELECT 
+        r.id as region_id,
+        r.name as region,
+        COUNT(p.id) as count
+      FROM properties p
+      LEFT JOIN regions r ON p.region_id = r.id
+      WHERE p.is_deleted = false ${tenantId ? prisma.$queryRaw`AND p.company_id = ${tenantId}` : prisma.$queryRaw``}
+      GROUP BY r.id, r.name
+      ORDER BY count DESC
+      LIMIT 10
+    ` as Promise<any[]>,
+    // Value statistics
+    prisma.$queryRaw`
+      SELECT 
+        COALESCE(SUM(COALESCE(sale_price, rental_price_monthly * 12, 0)), 0) as total_value,
+        COALESCE(AVG(COALESCE(sale_price, rental_price_monthly * 12, 0)), 0) as avg_value,
+        COALESCE(MIN(COALESCE(sale_price, rental_price_monthly * 12, 0)), 0) as min_value,
+        COALESCE(MAX(COALESCE(sale_price, rental_price_monthly * 12, 0)), 0) as max_value
+      FROM properties
+      WHERE is_deleted = false ${tenantId ? prisma.$queryRaw`AND company_id = ${tenantId}` : prisma.$queryRaw``}
+    ` as Promise<any[]>,
+    // Recent properties
+    prisma.property.findMany({
+      where,
+      include: {
+        property_types: { select: { name: true } },
+        regions: { select: { name: true } },
+        property_statuses: { select: { name: true } },
+        property_images: {
+          orderBy: { display_order: 'asc' },
+          take: 1,
+        },
+      },
+      orderBy: { created_at: 'desc' },
+      take: 5,
+    }),
+    // Recent activities
+    prisma.activity.findMany({
+      where: {
+        ...(tenantId && { tenantId }),
+        dateTime: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+      },
+      include: {
+        assignedTo: { select: { name: true } },
+        createdBy: { select: { name: true } },
+      },
+      orderBy: { dateTime: 'desc' },
+      take: 10,
+    }),
+  ]);
+
+  // Process value stats
+  const valueStatsData = valueStats[0] || {
+    total_value: 0,
+    avg_value: 0,
+    min_value: 0,
+    max_value: 0,
+  };
+
+  // Lead statistics
+  const leadStats = {
+    total: leads.length,
+    new: leads.filter(l => l.status === 'NEW').length,
+    contacted: leads.filter(l => l.status === 'CONTACTED').length,
+    qualified: leads.filter(l => l.status === 'QUALIFIED').length,
+    negotiating: leads.filter(l => l.status === 'NEGOTIATING').length,
+    won: leads.filter(l => l.status === 'WON').length,
+    lost: leads.filter(l => l.status === 'LOST').length,
+    bySource: leads.reduce((acc: any, lead) => {
+      const source = lead.source || 'UNKNOWN';
+      acc[source] = (acc[source] || 0) + 1;
+      return acc;
+    }, {}),
+  };
+
+  // Team statistics
+  const teamStats = {
+    total: users.length,
+    active: users.filter(u => u.status === 'ACTIVE').length,
+    employees: users.filter(u => u.role === 'EMPLOYEE').length,
+    managers: users.filter(u => u.role === 'MANAGER').length,
+    owners: users.filter(u => u.role === 'OWNER').length,
+  };
+
+  const dashboardStats = {
+    properties: {
+      total: propertiesCount,
+      public: publishedCount,
+      private: propertiesCount - publishedCount,
+      byType: propertyByType.map((item: any) => ({
+        type_id: item.type_id,
+        type: item.type || 'Unknown',
+        count: Number(item.count),
+      })),
+      byStatus: propertyByStatus.map((item: any) => ({
+        status_id: item.status_id,
+        status: item.status || 'Unknown',
+        count: Number(item.count),
+      })),
+      byRegion: propertyByRegion.map((item: any) => ({
+        region_id: item.region_id,
+        region: item.region || 'Unknown',
+        count: Number(item.count),
+      })),
+      valueStats: {
+        total_value: Number(valueStatsData.total_value),
+        avg_value: Number(valueStatsData.avg_value),
+        min_value: Number(valueStatsData.min_value),
+        max_value: Number(valueStatsData.max_value),
+      },
+      recent: recentProperties.map(p => ({
+        id: p.id,
+        property_number: p.property_number,
+        property_name: p.property_name,
+        title: p.title,
+        type: p.property_types?.name,
+        region: p.regions?.name,
+        status: p.property_statuses?.name,
+        sale_price: p.sale_price ? Number(p.sale_price) : null,
+        rental_price_monthly: p.rental_price_monthly ? Number(p.rental_price_monthly) : null,
+        image: p.property_images[0]?.image_url || null,
+        created_at: p.created_at,
+      })),
+    },
+    leads: leadStats,
+    team: teamStats,
+    recentActivities: recentActivities.map(a => ({
+      id: a.id,
+      type: a.type,
+      title: a.title,
+      description: a.description,
+      status: a.status,
+      priority: a.priority,
+      assignedTo: a.assignedTo?.name,
+      createdBy: a.createdBy?.name,
+      linkedType: a.linkedType,
+      linkedId: a.linkedId,
+      dateTime: a.dateTime,
+    })),
+    timestamp: new Date().toISOString(),
+  };
+
+  return {
+    content: [
+      {
+        type: 'text',
+        text: JSON.stringify(dashboardStats, null, 2),
       },
     ],
   };
